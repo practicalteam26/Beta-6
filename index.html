@@ -15,11 +15,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
-        /* الهوية البصرية الفخمة المطابقة لمنصة MED26 OSPE */
+        /* الهوية البصرية الفخمة المطابقة لمنصة MED26 OSPE (محسنة للسرعة القصوى 60FPS) */
         :root {
             --bg-main: #141210;
             --bg-secondary: #1e1b17;
-            --bg-card: rgba(36, 32, 27, 0.92);
+            --bg-card: #24201b;
             --bg-input: #161310;
             --text-main: #f7f4ef;
             --text-muted: #c4baa8;
@@ -33,7 +33,7 @@
         body.light-mode {
             --bg-main: #f6f3ec;
             --bg-secondary: #ebe5d8;
-            --bg-card: rgba(255, 255, 255, 0.95);
+            --bg-card: #ffffff;
             --bg-input: #f9f6f0;
             --text-main: #1f1c18;
             --text-muted: #5c5346;
@@ -59,10 +59,9 @@
             flex-direction: column;
             justify-content: space-between;
             overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* الخلفية الطبوغرافية والضباب الذهبي */
+        /* الخلفية الطبوغرافية الخفيفة */
         #bg-Stage {
             position: fixed;
             inset: 0;
@@ -73,32 +72,7 @@
             overflow: hidden;
         }
 
-        #cinematic-fog-stage {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-
-        .fog-top-spotlight {
-            position: absolute;
-            top: -220px;
-            left: 50%;
-            width: 1200px;
-            height: 650px;
-            transform: translateX(-50%);
-            background: radial-gradient(ellipse at 50% 0%, rgba(235, 210, 164, 0.22) 0%, rgba(207, 169, 107, 0.10) 45%, transparent 75%);
-            filter: blur(45px);
-        }
-
-        body.light-mode #cinematic-fog-stage {
-            opacity: 0.35;
-        }
-
-        /* مربع التحديد العالمي العائم (يسمح بالخروج خارج حدود الصورة بحرية تامة) */
+        /* مربع التحديد العالمي العائم (سريع جداً ويسمح بالخروج خارج حدود الصورة) */
         #global-selection-marquee {
             position: fixed;
             pointer-events: none;
@@ -107,7 +81,7 @@
             border: 3px dashed #10b981;
             background: rgba(16, 185, 129, 0.22);
             border-radius: 6px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+            will-change: left, top, width, height;
         }
 
         /* الهيدر العلوي */
@@ -115,14 +89,10 @@
             position: sticky;
             top: 0;
             z-index: 40;
-            background: rgba(30, 27, 23, 0.92);
-            backdrop-filter: blur(12px);
+            background: var(--bg-secondary);
             border-bottom: 1.5px solid var(--border-color);
             padding: 14px 20px;
-        }
-
-        body.light-mode header {
-            background: rgba(235, 229, 216, 0.92);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .header-inner {
@@ -174,9 +144,7 @@
             background-color: var(--bg-card);
             border: 1.5px solid var(--border-color);
             border-radius: 22px;
-            box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(14px);
-            transition: all 0.25s ease;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.3);
             position: relative;
         }
 
@@ -186,7 +154,7 @@
             font-weight: 900;
             border: none;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.15s ease, opacity 0.15s ease;
         }
 
         .gold-btn:hover:not(:disabled), .gold-btn:active:not(:disabled) {
@@ -200,7 +168,7 @@
             color: var(--text-main);
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background-color 0.15s ease, color 0.15s ease;
         }
 
         .pill-btn:hover:not(:disabled), .pill-btn.active {
@@ -251,13 +219,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.3s;
         }
 
         .step-card.active {
             border-color: var(--gold-bright);
             background: rgba(207, 169, 107, 0.15);
-            box-shadow: 0 0 18px rgba(207, 169, 107, 0.2);
         }
 
         .step-card.done {
@@ -341,7 +307,6 @@
             padding: 32px 16px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.25s;
             background: var(--bg-secondary);
             min-height: 250px;
             display: flex;
@@ -388,12 +353,6 @@
             justify-content: space-between;
             gap: 10px;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .best-preset-banner:hover {
-            border-color: var(--gold-bright);
-            box-shadow: 0 0 15px rgba(207, 169, 107, 0.25);
         }
 
         .best-preset-label {
@@ -622,7 +581,7 @@
             height: 100%;
             width: 0%;
             background: linear-gradient(90deg, #cfa96b, #10b981);
-            transition: width 0.3s;
+            transition: width 0.2s;
         }
 
         /* شريط الأدوات التفاعلي الثابت */
@@ -700,7 +659,6 @@
             cursor: pointer;
             background: transparent;
             color: var(--text-muted);
-            transition: all 0.2s;
         }
 
         .mode-btn.active-protect {
@@ -721,7 +679,7 @@
             border-color: var(--gold-primary);
         }
 
-        /* قائمة الصفحات المعالجة */
+        /* قائمة الصفحات المعالجة (مع تفعيل content-visibility لتسريع التمرير 10x) */
         .pages-list {
             display: flex;
             flex-direction: column;
@@ -730,11 +688,12 @@
 
         .page-item {
             overflow: hidden;
-            transition: opacity 0.25s ease, transform 0.25s ease;
+            content-visibility: auto;
+            contain-intrinsic-size: 460px;
         }
 
         .page-item.excluded-page {
-            opacity: 0.48;
+            opacity: 0.45;
             border-color: rgba(244, 63, 94, 0.45);
         }
 
@@ -884,7 +843,7 @@
             pointer-events: none;
         }
 
-        /* الفوتر والشريط المتحرك المطابق للمنصة */
+        /* الفوتر والشريط المتحرك */
         footer {
             border-top: 1.5px solid var(--border-color);
             background: var(--bg-secondary);
@@ -941,27 +900,21 @@
 </head>
 <body>
 
-    <!-- مربع التحديد العالمي العائم (يسمح بالسحب داخل وخارج حدود الصورة بحرية تامة) -->
+    <!-- مربع التحديد العالمي العائم -->
     <div id="global-selection-marquee"></div>
 
-    <!-- خلفية الموقع الطبوغرافية والضباب الذهبي -->
+    <!-- خلفية الموقع الطبوغرافية -->
     <div id="bg-Stage">
-        <svg style="width:100%;height:100%;opacity:0.28;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+        <svg style="width:100%;height:100%;opacity:0.25;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
             <g fill="none" stroke="#cfa96b" stroke-width="1.3">
                 <path d="M-120 40 C 260 -20, 520 200, 920 60 C 1180 -30, 1360 140, 1600 30" opacity="0.5"/>
                 <path d="M-120 110 C 300 50, 560 270, 960 130 C 1220 40, 1400 210, 1600 100" opacity="0.85"/>
-                <path d="M-120 180 C 340 120, 600 340, 1000 200 C 1260 110, 1440 280, 1600 170" opacity="0.5"/>
                 <path d="M-120 415 C 240 555, 670 275, 1070 455 C 1300 555, 1450 365, 1600 445" opacity="0.65"/>
-                <path d="M-120 485 C 280 625, 710 345, 1110 525 C 1340 625, 1490 435, 1600 515" opacity="0.75"/>
                 <path d="M-120 715 C 390 595, 810 815, 1210 675 C 1370 615, 1480 755, 1600 695" opacity="0.65"/>
-                <path d="M-120 785 C 430 665, 850 885, 1250 745 C 1410 685, 1520 825, 1600 765" opacity="0.7"/>
                 <circle cx="1320" cy="160" r="160" stroke-dasharray="6 8" opacity="0.3"/>
                 <circle cx="120" cy="740" r="200" stroke-dasharray="5 9" opacity="0.3"/>
             </g>
         </svg>
-    </div>
-    <div id="cinematic-fog-stage">
-        <div class="fog-top-spotlight"></div>
     </div>
 
     <!-- الشريط العلوي -->
@@ -1096,7 +1049,7 @@
                     </div>
                 </div>
 
-                <!-- خيار الـ Upscale لتوضيح وتسميك النصوص عند دمج عدة شرائح في صفحة واحدة -->
+                <!-- خيار الـ Upscale لتوضيح وتسميك النصوص عند التصدير النهائي -->
                 <div class="upscale-banner">
                     <label class="upscale-label" for="upscaleTextCheckbox">
                         <input type="checkbox" id="upscaleTextCheckbox" checked onchange="reprocessAllPages()">
@@ -1160,7 +1113,7 @@
             </div>
         </div>
 
-        <!-- شريط الأدوات التفاعلي الثابت (يدعم السحب حتى خارج حدود الصورة + الجوال والآيباد) -->
+        <!-- شريط الأدوات التفاعلي الثابت -->
         <div class="app-card legend-bar">
             <div class="legend-items">
                 <span class="legend-tag"><span class="dot-img"></span> <b>أخضر [صورة]:</b> تُنقل بألوانها 100%</span>
@@ -1216,13 +1169,12 @@
     </footer>
 
 <script>
-    // إعداد مكتبة PDF.js
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     let currentPdf = null;
     let pagesData = [];
     let uploadedFileName = "MED26_Summary";
-    let currentMouseMode = 'protect'; // 'protect' | 'erase' | 'scroll'
+    let currentMouseMode = 'protect';
 
     const fileInput = document.getElementById('fileInput');
     const dropZone = document.getElementById('dropZone');
@@ -1241,7 +1193,6 @@
         document.body.classList.toggle('light-mode');
     }
 
-    // تطبيق أفضل الخيارات التلقائية للتحويل للأبيض
     function applyBestWhitePreset(isChecked) {
         if (isChecked) {
             bgThresholdInput.value = 92;
@@ -1314,7 +1265,6 @@
         });
     }
 
-    // دعم السحب والإفلات والرفع
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
     dropZone.addEventListener('drop', (e) => {
@@ -1355,7 +1305,7 @@
         pagesData = [];
 
         setPipelineStep(1);
-        updateProgress(5, 'جاري قراءة ملف الـ PDF وتجهيز محرك الخطوط المتجهة فائق الوضوح (Ultra-HD Vector Fonts)...');
+        updateProgress(5, 'جاري قراءة ملف الـ PDF وتجهيز المعاينة السريعة...');
 
         const arrayBuffer = await file.arrayBuffer();
 
@@ -1369,30 +1319,29 @@
         }).promise;
 
         const totalPages = currentPdf.numPages;
-        // رفع دقة الـ Scale الأساسي لضمان وضوح فائق للنصوص حتى عند تصغير الشرائح في A4
-        const isMobileOrTablet = window.innerWidth <= 1024;
-        const scale = isMobileOrTablet ? 2.0 : 2.5;
+        const previewScale = 1.15;
 
         for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
             updateProgress(
                 ((pageNum - 1) / totalPages) * 100,
-                `معالجة صفحة ${pageNum} من ${totalPages}: تجميع الجمل، عزل الصور، وتطبيق Upscale...`
+                `معالجة صفحة ${pageNum} من ${totalPages}...`
             );
-            await processSinglePage(pageNum, totalPages, scale);
+            await processSinglePagePreview(pageNum, totalPages, previewScale);
+            await new Promise(r => setTimeout(r, 8));
         }
 
         setPipelineStep(5);
         updateIncludedPagesSummary();
-        updateProgress(100, `✅ اكتملت معالجة جميع الصفحات (${totalPages} صفحة) بدقة Ultra-HD! جاهز للطباعة.`);
+        updateProgress(100, `✅ اكتملت معالجة جميع الصفحات (${totalPages} صفحة) بنجاح! جاهز للطباعة.`);
         document.getElementById('reprocessBtn').disabled = false;
         document.getElementById('downloadPdfBtn').disabled = false;
         document.getElementById('autoExcludeBtn').disabled = false;
         document.getElementById('selectAllPagesBtn').disabled = false;
     }
 
-    async function processSinglePage(pageNum, totalPages, scale) {
+    async function processSinglePagePreview(pageNum, totalPages, previewScale) {
         const page = await currentPdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: scale });
+        const viewport = page.getViewport({ scale: previewScale });
         const width = Math.floor(viewport.width);
         const height = Math.floor(viewport.height);
 
@@ -1429,7 +1378,7 @@
         };
 
         pagesData.push(pageObj);
-        runReconstructionPipeline(pageObj);
+        runReconstructionOnCanvas(pageObj, pageObj.origImageData, pageObj.outCanvas, false);
     }
 
     function updateIncludedPagesSummary() {
@@ -1483,8 +1432,8 @@
         for (const item of textContent.items) {
             if (!item.str || !item.str.trim()) continue;
             const tx = pdfjsLib.Util.transform(viewport.transform, item.transform);
-            const h = Math.max(10, Math.hypot(tx[2], tx[3]));
-            const w = Math.max(8, item.width * viewport.scale);
+            const h = Math.max(8, Math.hypot(tx[2], tx[3]));
+            const w = Math.max(6, item.width * viewport.scale);
             const x = tx[4];
             const y = tx[5] - h * 0.85;
             rawItems.push({ str: item.str, x, y, w, h });
@@ -1520,11 +1469,9 @@
         return mergedLines;
     }
 
-    function getAutoLogoBoxes(pageObj) {
+    function getAutoLogoBoxesForSize(width, height, pageNum, totalPages) {
         const mode = logoRemoveModeSelect.value;
-        const { width, height, pageNum, totalPages } = pageObj;
         const boxes = [];
-
         if (mode === 'none') return boxes;
 
         const bottomLeftLogo = {
@@ -1563,9 +1510,10 @@
         return boxes;
     }
 
-    function runReconstructionPipeline(pageObj) {
-        const { width, height, origImageData, manualHistory } = pageObj;
-        const src = origImageData.data;
+    function runReconstructionOnCanvas(pageObj, sourceImageData, targetCanvas, isFinalExport = false) {
+        const width = sourceImageData.width;
+        const height = sourceImageData.height;
+        const src = sourceImageData.data;
 
         const bgThresh = parseInt(bgThresholdInput.value, 10);
         const cardThresh = parseInt(cardThresholdInput.value, 10);
@@ -1573,18 +1521,23 @@
         const drawBorders = addCardBorders.checked;
         const isUpscaleActive = upscaleTextCheckbox.checked;
 
-        setPipelineStep(3);
-
-        const ds = 4;
+        const ds = Math.max(2, Math.round(width / 320));
         const gw = Math.ceil(width / ds);
         const gh = Math.ceil(height / ds);
         const brightGrid = new Uint8Array(gw * gh);
 
-        const autoEraseBoxes = getAutoLogoBoxes(pageObj);
-        pageObj.autoEraseBoxes = autoEraseBoxes;
+        const autoEraseBoxes = getAutoLogoBoxesForSize(width, height, pageObj.pageNum, pageObj.totalPages);
 
-        const manualProtectBoxes = manualHistory.filter(m => m.type === 'protect');
-        const manualEraseBoxes = manualHistory.filter(m => m.type === 'erase');
+        const scaledManualHistory = pageObj.manualHistory.map(m => ({
+            type: m.type,
+            x: m.rx * width,
+            y: m.ry * height,
+            w: m.rw * width,
+            h: m.rh * height
+        }));
+
+        const manualEraseBoxes = scaledManualHistory.filter(m => m.type === 'erase');
+        const manualProtectBoxes = scaledManualHistory.filter(m => m.type === 'protect');
 
         const eraseGrid = new Uint8Array(gw * gh);
         for (const eBox of [...autoEraseBoxes, ...manualEraseBoxes]) {
@@ -1607,8 +1560,7 @@
 
                 const px = Math.min(width - 1, gx * ds);
                 const idx = (py * width + px) * 4;
-                const r = src[idx], g = src[idx + 1], b = src[idx + 2];
-                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                const lum = 0.299 * src[idx] + 0.587 * src[idx + 1] + 0.114 * src[idx + 2];
 
                 if (lum >= cardThresh) {
                     brightGrid[gIdx] = 1;
@@ -1662,10 +1614,9 @@
 
                     const boxW = maxX - minX + 1;
                     const boxH = maxY - minY + 1;
-                    const rectArea = boxW * boxH;
-                    const fillRatio = component.length / rectArea;
+                    const fillRatio = component.length / (boxW * boxH);
 
-                    if (component.length >= minBlobArea && boxW > 6 && boxH > 5) {
+                    if (component.length >= minBlobArea && boxW > 5 && boxH > 4) {
                         if (fillRatio > 0.35) {
                             const radius = Math.min(4, Math.floor(Math.min(boxW, boxH) * 0.08));
                             for (let gy = minY; gy <= maxY; gy++) {
@@ -1747,8 +1698,7 @@
             }
         }
 
-        // تطبيق مربعات التحديد اليدوية (الحماية والمسح)
-        for (const item of manualHistory) {
+        for (const item of scaledManualHistory) {
             const gx0 = Math.max(0, Math.floor(item.x / ds));
             const gy0 = Math.max(0, Math.floor(item.y / ds));
             const gx1 = Math.min(gw - 1, Math.ceil((item.x + item.w) / ds));
@@ -1766,15 +1716,15 @@
             }
         }
 
-        pageObj.detectedImageBoxes = detectedBoxes;
+        if (!isFinalExport) {
+            pageObj.detectedImageBoxes = detectedBoxes;
+            pageObj.autoEraseBoxes = autoEraseBoxes;
+        }
 
-        setPipelineStep(4);
-
-        const outCtx = pageObj.outCanvas.getContext('2d');
+        const outCtx = targetCanvas.getContext('2d');
         const outImageData = outCtx.createImageData(width, height);
         const dst = outImageData.data;
 
-        // عند تفعيل Upscale Ultra-HD نقوم بتقوية حبر النصوص وحواف الحروف (Gamma = 0.56) لتظهر بحجم أوضح عند تصغير الشرائح
         const textGamma = isUpscaleActive ? 0.56 : 0.88;
 
         for (let y = 0; y < height; y++) {
@@ -1835,7 +1785,7 @@
                 } else {
                     const normalized = Math.max(0, (lum - bgThresh) / (255 - bgThresh));
                     let ink = Math.round(255 * (1 - Math.pow(normalized, textGamma)));
-                    if (isUpscaleActive && ink < 95) ink = 0; // جعل قلب الحروف أسود فاحماً 100% للوضوح عند التصغير
+                    if (isUpscaleActive && ink < 95) ink = 0;
                     dst[pIdx] = ink;
                     dst[pIdx + 1] = ink;
                     dst[pIdx + 2] = ink;
@@ -1844,22 +1794,22 @@
             }
         }
 
-        // إذا كان Upscale مفعلاً، نطبق فلتر توضيح الحواف الدقيق (Crisp Edge Sharpening) على الصور والخطوط داخل البطاقات أيضاً
-        if (isUpscaleActive) {
+        if (isFinalExport && isUpscaleActive) {
             applySubtleTextSharpening(outImageData.data, width, height, protectedGrid, gw, ds);
         }
 
         outCtx.putImageData(outImageData, 0, 0);
 
-        const totalImages = detectedBoxes.length + manualProtectBoxes.length;
-        pageObj.statsEl.textContent = `الصور: ${totalImages} • الأسطر: ${pageObj.lineBlocks.length}`;
-        drawLayoutOverlay(pageObj);
+        if (!isFinalExport) {
+            const totalImages = detectedBoxes.length + manualProtectBoxes.length;
+            pageObj.statsEl.textContent = `الصور: ${totalImages} • الأسطر: ${pageObj.lineBlocks.length}`;
+            drawLayoutOverlay(pageObj);
+        }
     }
 
-    // فلتر توضيح الحواف (Unsharp Mask) للنصوص الصغيرة داخل المخططات والبطاقات
     function applySubtleTextSharpening(data, width, height, protectedGrid, gw, ds) {
         const copy = new Uint8ClampedArray(data);
-        const amount = 0.35;
+        const amount = 0.38;
         for (let y = 1; y < height - 1; y++) {
             const gy = Math.floor(y / ds);
             for (let x = 1; x < width - 1; x++) {
@@ -1890,39 +1840,39 @@
 
         if (!showBoxesToggle.checked) return;
 
-        // 1. مربعات الأسطر والجمل (ذهبي)
         ctx.strokeStyle = 'rgba(207, 169, 107, 0.8)';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         for (const lb of pageObj.lineBlocks) {
             ctx.strokeRect(lb.x, lb.y, lb.w, lb.h);
         }
 
-        // 2. مربعات الصور المكتشفة والمضافة يدوياً (أخضر)
-        const manualProtect = pageObj.manualHistory.filter(m => m.type === 'protect');
+        const manualProtect = pageObj.manualHistory
+            .filter(m => m.type === 'protect')
+            .map(m => ({ x: m.rx * pageObj.width, y: m.ry * pageObj.height, w: m.rw * pageObj.width, h: m.rh * pageObj.height }));
+
         const allImgBoxes = [...pageObj.detectedImageBoxes, ...manualProtect];
         ctx.strokeStyle = '#10b981';
         ctx.fillStyle = 'rgba(16, 185, 129, 0.14)';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2.5;
         for (const box of allImgBoxes) {
             ctx.fillRect(box.x, box.y, box.w, box.h);
             ctx.strokeRect(box.x, box.y, box.w, box.h);
         }
 
-        // 3. مربعات المسح (أحمر)
-        const manualErase = pageObj.manualHistory.filter(m => m.type === 'erase');
+        const manualErase = pageObj.manualHistory
+            .filter(m => m.type === 'erase')
+            .map(m => ({ x: m.rx * pageObj.width, y: m.ry * pageObj.height, w: m.rw * pageObj.width, h: m.rh * pageObj.height }));
+
         const allEraseBoxes = [...pageObj.autoEraseBoxes, ...manualErase];
         ctx.strokeStyle = '#f43f5e';
         ctx.fillStyle = 'rgba(244, 63, 94, 0.22)';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2.5;
         for (const box of allEraseBoxes) {
             ctx.fillRect(box.x, box.y, box.w, box.h);
             ctx.strokeRect(box.x, box.y, box.w, box.h);
         }
     }
 
-    // =========================================================================
-    // نظام التحديد العالمي المضمون 100% (يعمل على كامل الصفحة ويدعم الماوس واللمس والخروج خارج الصورة)
-    // =========================================================================
     let activeDragState = null;
 
     function getClientXY(e) {
@@ -1938,11 +1888,8 @@
     function handleGlobalStart(e) {
         if (currentMouseMode === 'scroll') return;
         if (e.type === 'mousedown' && e.button !== 0) return;
-
-        // تجاهل الضغط على الأزرار أو العناوين العلوية
         if (e.target.closest('button, input, select, label, .page-header')) return;
 
-        // البحث عن بطاقة الصفحة التي بدأ المستخدم السحب بداخلها (حتى لو بدأ من الإطار الخارجي حول الصورة!)
         const pageItemEl = e.target.closest('.page-item');
         if (!pageItemEl) return;
 
@@ -1952,7 +1899,6 @@
 
         const pt = getClientXY(e);
 
-        // تحديد أي لوحة أقرب لنقطة ضغط المستخدم (اليمين الأصلية أم اليسار البيضاء)
         const origRect = pageObj.origWrapper.getBoundingClientRect();
         const outRect = pageObj.outWrapper.getBoundingClientRect();
 
@@ -2019,35 +1965,32 @@
         globalMarquee.style.display = 'none';
 
         const rect = targetWrapper.getBoundingClientRect();
-        const scaleX = pageObj.width / rect.width;
-        const scaleY = pageObj.height / rect.height;
 
         const rawX0 = Math.min(startX, currX) - rect.left;
         const rawY0 = Math.min(startY, currY) - rect.top;
         const rawX1 = Math.max(startX, currX) - rect.left;
         const rawY1 = Math.max(startY, currY) - rect.top;
 
-        // تقييد الإحداثيات بحدود الصورة (حتى لو بدأ المستخدم أو خرج خارج حدود الصورة!)
         const clampedX0 = Math.max(0, Math.min(rect.width, rawX0));
         const clampedY0 = Math.max(0, Math.min(rect.height, rawY0));
         const clampedX1 = Math.max(0, Math.min(rect.width, rawX1));
         const clampedY1 = Math.max(0, Math.min(rect.height, rawY1));
 
-        const x = clampedX0 * scaleX;
-        const y = clampedY0 * scaleY;
-        const w = (clampedX1 - clampedX0) * scaleX;
-        const h = (clampedY1 - clampedY0) * scaleY;
+        const wPx = clampedX1 - clampedX0;
+        const hPx = clampedY1 - clampedY0;
 
-        if (w > 10 && h > 10) {
+        if (wPx > 6 && hPx > 6) {
             pageObj.manualHistory.push({
                 type: currentMouseMode === 'protect' ? 'protect' : 'erase',
-                x, y, w, h
+                rx: clampedX0 / rect.width,
+                ry: clampedY0 / rect.height,
+                rw: wPx / rect.width,
+                rh: hPx / rect.height
             });
-            runReconstructionPipeline(pageObj);
+            runReconstructionOnCanvas(pageObj, pageObj.origImageData, pageObj.outCanvas, false);
         }
     }
 
-    // ربط الأحداث بالنافذة مباشرة لضمان عملها 100% على الكمبيوتر والجوال والآيباد
     window.addEventListener('mousedown', handleGlobalStart);
     window.addEventListener('mousemove', handleGlobalMove);
     window.addEventListener('mouseup', handleGlobalEnd);
@@ -2059,7 +2002,7 @@
 
     function reprocessAllPages() {
         for (const pageObj of pagesData) {
-            runReconstructionPipeline(pageObj);
+            runReconstructionOnCanvas(pageObj, pageObj.origImageData, pageObj.outCanvas, false);
         }
         updateIncludedPagesSummary();
     }
@@ -2067,7 +2010,7 @@
     function createPageCardUI(pageNum, width, height) {
         const card = document.createElement('div');
         card.className = 'app-card page-item';
-        card.dataset.pageNum = pageNum; // مهم جداً لربط التحديد بالصفحة فوراً
+        card.dataset.pageNum = pageNum;
 
         const header = document.createElement('div');
         header.className = 'page-header';
@@ -2111,7 +2054,7 @@
             const p = pagesData.find(item => item.pageNum === pageNum);
             if (p && p.manualHistory.length > 0) {
                 p.manualHistory.pop();
-                runReconstructionPipeline(p);
+                runReconstructionOnCanvas(p, p.origImageData, p.outCanvas, false);
             }
         };
 
@@ -2123,7 +2066,7 @@
             const p = pagesData.find(item => item.pageNum === pageNum);
             if (p) {
                 p.manualHistory = [];
-                runReconstructionPipeline(p);
+                runReconstructionOnCanvas(p, p.origImageData, p.outCanvas, false);
             }
         };
 
@@ -2131,13 +2074,16 @@
         dlImgBtn.type = 'button';
         dlImgBtn.className = 'pill-btn btn-sm';
         dlImgBtn.textContent = '🖼️ حفظ PNG';
-        dlImgBtn.onclick = () => {
+        dlImgBtn.onclick = async () => {
             const p = pagesData.find(item => item.pageNum === pageNum);
             if (p) {
+                dlImgBtn.textContent = '⏳ جاري التصدير...';
+                const hiResCanvas = await renderSinglePageUltraHD(p);
                 const link = document.createElement('a');
                 link.download = `${uploadedFileName}_Page_${pageNum}_White.png`;
-                link.href = p.outCanvas.toDataURL('image/png');
+                link.href = hiResCanvas.toDataURL('image/png');
                 link.click();
+                dlImgBtn.textContent = '🖼️ حفظ PNG';
             }
         };
 
@@ -2191,9 +2137,33 @@
         return { card, includeCheckbox, origWrapper, outWrapper, origCanvas, overlayCanvas, outCanvas, statsEl };
     }
 
-    // =========================================================================
-    // تصدير ملف الـ PDF مع دعم Upscale Ultra-HD لوضوح النصوص عند دمج الشرائح في A4
-    // =========================================================================
+    async function renderSinglePageUltraHD(pageObj) {
+        const exportScale = upscaleTextCheckbox.checked ? 2.4 : 1.8;
+        const page = await currentPdf.getPage(pageObj.pageNum);
+        const viewport = page.getViewport({ scale: exportScale });
+        const w = Math.floor(viewport.width);
+        const h = Math.floor(viewport.height);
+
+        const tempOrigCanvas = document.createElement('canvas');
+        tempOrigCanvas.width = w;
+        tempOrigCanvas.height = h;
+        const tempOrigCtx = tempOrigCanvas.getContext('2d');
+        await page.render({ canvasContext: tempOrigCtx, viewport: viewport }).promise;
+        const hiResImageData = tempOrigCtx.getImageData(0, 0, w, h);
+
+        const tempOutCanvas = document.createElement('canvas');
+        tempOutCanvas.width = w;
+        tempOutCanvas.height = h;
+
+        runReconstructionOnCanvas(pageObj, hiResImageData, tempOutCanvas, true);
+
+        tempOrigCanvas.width = 1;
+        tempOrigCanvas.height = 1;
+
+        return tempOutCanvas;
+    }
+
+    // تصدير ملف الـ PDF النهائي بدون أي جملة أو نص إضافي أسفل الصفحة
     async function exportPrintablePDF() {
         const includedPages = pagesData.filter(p => p.includedInPrint);
         if (!includedPages.length) {
@@ -2204,32 +2174,43 @@
         const btn = document.getElementById('downloadPdfBtn');
         const oldText = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '⏳ جاري تطبيق Upscale وتصدير الـ PDF للطباعة...';
 
         try {
             const { jsPDF } = window.jspdf;
             const layoutMode = parseInt(slidesPerPageSelect.value, 10);
             const isUpscale = upscaleTextCheckbox.checked;
-            const jpegQuality = isUpscale ? 0.98 : 0.92;
+            const jpegQuality = isUpscale ? 0.96 : 0.92;
 
             if (layoutMode === 1) {
-                const firstPage = includedPages[0];
-                const isLandscape = firstPage.width >= firstPage.height;
-
-                const pdf = new jsPDF({
-                    orientation: isLandscape ? 'landscape' : 'portrait',
-                    unit: 'px',
-                    format: [firstPage.width, firstPage.height],
-                    compress: true
-                });
+                let pdf = null;
 
                 for (let i = 0; i < includedPages.length; i++) {
                     const p = includedPages[i];
-                    if (i > 0) {
-                        pdf.addPage([p.width, p.height], p.width >= p.height ? 'landscape' : 'portrait');
+                    btn.innerHTML = `⏳ جاري تصدير صفحة ${i + 1} من ${includedPages.length}...`;
+                    updateProgress(((i + 1) / includedPages.length) * 100, `جاري تصدير صفحة ${p.pageNum} بدقة الطباعة الفائقة...`);
+                    await new Promise(r => setTimeout(r, 15));
+
+                    const hiResCanvas = await renderSinglePageUltraHD(p);
+                    const w = hiResCanvas.width;
+                    const h = hiResCanvas.height;
+                    const isLandscape = w >= h;
+
+                    if (i === 0) {
+                        pdf = new jsPDF({
+                            orientation: isLandscape ? 'landscape' : 'portrait',
+                            unit: 'px',
+                            format: [w, h],
+                            compress: true
+                        });
+                    } else {
+                        pdf.addPage([w, h], isLandscape ? 'landscape' : 'portrait');
                     }
-                    const imgData = p.outCanvas.toDataURL('image/jpeg', jpegQuality);
-                    pdf.addImage(imgData, 'JPEG', 0, 0, p.width, p.height, undefined, isUpscale ? 'SLOW' : 'MEDIUM');
+
+                    const imgData = hiResCanvas.toDataURL('image/jpeg', jpegQuality);
+                    pdf.addImage(imgData, 'JPEG', 0, 0, w, h, undefined, 'FAST');
+
+                    hiResCanvas.width = 1;
+                    hiResCanvas.height = 1;
                 }
 
                 pdf.save(`${uploadedFileName}_White_Printable.pdf`);
@@ -2244,7 +2225,6 @@
 
                 const pageW = isLandscapeA4 ? 297 : 210;
                 const pageH = isLandscapeA4 ? 210 : 297;
-                // تقليل الهوامش الجانبية عند تفعيل Upscale لتكبير حجم كل شريحة إلى أقصى حد ممكن داخل ورقة A4
                 const marginX = isUpscale ? 5 : 8;
                 const marginY = isUpscale ? 6 : 10;
                 const gap = isUpscale ? 4 : 6;
@@ -2255,22 +2235,28 @@
                 else if (layoutMode === 6) { cols = 2; rows = 3; }
 
                 const cellW = (pageW - marginX * 2 - gap * (cols - 1)) / cols;
-                const cellH = (pageH - marginY * 2 - gap * (rows - 1) - 5) / rows;
+                const cellH = (pageH - marginY * 2 - gap * (rows - 1)) / rows;
 
                 for (let i = 0; i < includedPages.length; i++) {
+                    const p = includedPages[i];
+                    btn.innerHTML = `⏳ جاري تصدير شريحة ${i + 1} من ${includedPages.length}...`;
+                    updateProgress(((i + 1) / includedPages.length) * 100, `جاري تجهيز شريحة ${p.pageNum} بدقة Ultra-HD...`);
+                    await new Promise(r => setTimeout(r, 15));
+
                     const slotIdx = i % layoutMode;
                     if (i > 0 && slotIdx === 0) {
                         pdf.addPage('a4', isLandscapeA4 ? 'landscape' : 'portrait');
                     }
 
-                    const p = includedPages[i];
                     const col = slotIdx % cols;
                     const row = Math.floor(slotIdx / cols);
 
                     const boxX = marginX + col * (cellW + gap);
                     const boxY = marginY + row * (cellH + gap);
 
-                    const slideRatio = p.width / p.height;
+                    const hiResCanvas = await renderSinglePageUltraHD(p);
+                    const slideRatio = hiResCanvas.width / hiResCanvas.height;
+
                     let drawW = cellW;
                     let drawH = drawW / slideRatio;
                     if (drawH > cellH) {
@@ -2281,29 +2267,21 @@
                     const offsetX = boxX + (cellW - drawW) / 2;
                     const offsetY = boxY + (cellH - drawH) / 2;
 
-                    const imgData = p.outCanvas.toDataURL('image/jpeg', jpegQuality);
-                    pdf.addImage(imgData, 'JPEG', offsetX, offsetY, drawW, drawH, undefined, isUpscale ? 'SLOW' : 'MEDIUM');
+                    const imgData = hiResCanvas.toDataURL('image/jpeg', jpegQuality);
+                    pdf.addImage(imgData, 'JPEG', offsetX, offsetY, drawW, drawH, undefined, 'FAST');
+
+                    hiResCanvas.width = 1;
+                    hiResCanvas.height = 1;
 
                     pdf.setDrawColor(180, 190, 205);
                     pdf.setLineWidth(0.35);
                     pdf.rect(offsetX, offsetY, drawW, drawH);
-
-                    if (slotIdx === layoutMode - 1 || i === includedPages.length - 1) {
-                        pdf.setFontSize(7.5);
-                        pdf.setTextColor(120, 120, 120);
-                        const sheetNum = Math.floor(i / layoutMode) + 1;
-                        const totalSheets = Math.ceil(includedPages.length / layoutMode);
-                        pdf.text(
-                            `MED26 Smart Printable Summary • By R. Daghriri  |  Sheet ${sheetNum} of ${totalSheets}`,
-                            pageW / 2,
-                            pageH - 2.5,
-                            { align: 'center' }
-                        );
-                    }
                 }
 
-                pdf.save(`${uploadedFileName}_White_${layoutMode}in1_UltraHD_A4.pdf`);
+                pdf.save(`${uploadedFileName}_White_${layoutMode}in1_A4.pdf`);
             }
+
+            updateProgress(100, '✅ تم تصدير وتحميل ملف الـ PDF بنجاح!');
         } catch (err) {
             alert('حدث خطأ أثناء تصدير الـ PDF: ' + err.message);
         } finally {
