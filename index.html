@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>محول الملخصات الذكي للطباعة | MED26</title>
+	<link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
     
     <!-- خط كايرو المعتمد في المنصة -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -1321,6 +1323,94 @@
                 text-align: center;
             }
         }
+		/* 1. تأثير التحميل الذهبي (Skeleton Shimmer) */
+        .skeleton-card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            border-radius: 22px;
+            padding: 18px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .skeleton-shimmer-box {
+            height: 260px;
+            border-radius: 14px;
+            background: linear-gradient(90deg, rgba(30,27,23,0.9) 25%, rgba(207,169,107,0.18) 50%, rgba(30,27,23,0.9) 75%);
+            background-size: 200% 100%;
+            animation: goldShimmer 1.4s infinite linear;
+        }
+
+        @keyframes goldShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* 2. زر الشريحة التجريبية + شارة القلم الذكي */
+        .demo-slide-btn {
+            margin-top: 10px;
+            width: 100%;
+            padding: 9px 14px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            background: rgba(207, 169, 107, 0.12);
+            border: 1.5px dashed var(--gold-primary);
+            color: var(--gold-bright);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .demo-slide-btn:hover {
+            background: rgba(207, 169, 107, 0.24);
+            transform: translateY(-1px);
+        }
+
+        .mode-btn.active-stylus {
+            background: rgba(56, 189, 248, 0.22);
+            color: #7dd3fc;
+            border-color: #38bdf8;
+        }
+
+        /* 3. بطاقة ملخص الإنجاز الفخمة بعد التحميل (Success Summary Card) */
+        .success-summary-card {
+            background: var(--bg-card);
+            border: 2px solid var(--gold-primary);
+            border-radius: 24px;
+            max-width: 480px;
+            width: 100%;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+            animation: toastSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .success-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 18px 0;
+        }
+
+        .success-stat-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 8px;
+        }
+
+        .success-stat-box strong {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--gold-bright);
+        }
+
+        .success-stat-box span {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -1330,6 +1420,40 @@
 
     <!-- مربع التحديد العالمي العائم -->
     <div id="global-selection-marquee"></div>
+	<!-- بطاقة ملخص الإنجاز الفخمة بعد التحميل (Success Summary Card) -->
+    <div class="modal-backdrop" id="successSummaryModal" onclick="if(event.target===this) closeSuccessSummaryModal()">
+        <div class="success-summary-card">
+            <div style="font-size:2.6rem;margin-bottom:6px;">🎉</div>
+            <h3 style="font-size:1.15rem;font-weight:900;color:var(--gold-bright);margin-bottom:4px;">
+                تم تجهيز وتحميل ملخصك بنجاح!
+            </h3>
+            <p style="font-size:0.8rem;color:var(--text-muted);" id="successFileNameText">جاهز للطباعة الورقية أو المذاكرة</p>
+
+            <div class="success-stats-grid">
+                <div class="success-stat-box">
+                    <strong id="statInkSaved" style="color:#34d399;">92%</strong>
+                    <span>توفير الحبر الأسود</span>
+                </div>
+                <div class="success-stat-box">
+                    <strong id="statSheetsCount">0</strong>
+                    <span>ورقة A4 فعلية</span>
+                </div>
+                <div class="success-stat-box">
+                    <strong id="statFileSize">0 MB</strong>
+                    <span>حجم الملف النهائي</span>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                <button type="button" class="gold-btn btn" id="sharePdfBtn" onclick="shareLastExportedPDF()" style="flex:1;padding:10px 16px;font-size:0.84rem;">
+                    📤 مشاركة الملف (تيليجرام / ملاحظات)
+                </button>
+                <button type="button" class="pill-btn btn" onclick="closeSuccessSummaryModal()" style="padding:10px 18px;font-size:0.84rem;">
+                    تم 👍
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- نافذة التكبير الكامل (Fullscreen Zoom Modal) للتحديد الدقيق بالماوس أو الإصبع -->
     <div class="modal-backdrop" id="zoomEditorModal" onclick="if(event.target===this) closeZoomEditorModal()">
@@ -1339,6 +1463,8 @@
                     <span style="font-weight:900;color:var(--gold-bright);font-size:0.9rem;" id="zoomModalTitle">
                         🔍 تكبير الشريحة للتحديد الدقيق
                     </span>
+					<button type="button" class="pill-btn btn-sm" id="zoomPrevSlideBtn" onclick="navigateZoomSlide(-1)">➡️ السابقة</button>
+                    <button type="button" class="pill-btn btn-sm" id="zoomNextSlideBtn" onclick="navigateZoomSlide(1)">التالية ⬅️</button>
                     <div class="mouse-mode-switch">
                         <button type="button" class="mode-btn active-protect" id="zoomModeProtectBtn" onclick="setTouchMouseMode('protect')">
                             ➕ حماية صورة
@@ -1496,9 +1622,12 @@
                     <div class="upload-icon">📥</div>
                     <h3 id="fileNameDisplay">اضغط هنا لاختيار ملف الـ PDF أو اسحبه إلى هنا</h3>
                     <p>يحافظ على الصور الطبية بألوانها الأصلية ويمسح الخلفية السوداء والتموجات</p>
-                    <input type="file" id="fileInput" accept="application/pdf,.pdf">
+                   <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple>
                 </div>
-            </div>
+                <button type="button" class="demo-slide-btn" onclick="loadInteractiveDemoSlide()">
+                    🧪 ليس لديك ملف حالياً؟ جرّب الأداة فوراً على شريحة طبية جاهزة
+                </button>
+                </div>
 
             <!-- 2. الإعدادات الذكية -->
             <div class="app-card panel">
@@ -1541,6 +1670,16 @@
                         <span>🔍 تفعيل Upscale Ultra-HD (توضيح وتسميك النصوص لتكون حادة وواضحة عند تصغير الشرائح)</span>
                     </label>
                     <span class="gold-badge" style="background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;">300 DPI Crisp</span>
+                </div>
+				<!-- خيار مستوى ضغط وحجم ملف الـ PDF (300 DPI للطباعة أو خفيف للتلجرام) -->
+                <div class="control-group" style="margin-top:8px;">
+                    <label>
+                        <span>📦 مستوى جودة وحجم ملف الـ PDF النهائي</span>
+                    </label>
+                    <select id="pdfCompressionMode">
+                        <option value="print_300dpi" selected>🖨️ أقصى دقة للطباعة الورقية (300 DPI Ultra-HD)</option>
+                        <option value="telegram_lite">⚡ حجم خفيف ومضغوط للمشاركة السريعة في التلجرام (Lite)</option>
+                    </select>
                 </div>
 
                 <!-- زر طي وفتح الإعدادات الدقيقة المتقدمة (Clean UI Accordion) -->
@@ -1666,6 +1805,9 @@
                     </button>
                     <button type="button" class="mode-btn" id="globalCompareSliderBtn" onclick="toggleGlobalSliderCompareMode()">
                         🌗 مقارنة بالسحب
+                    </button>
+					<button type="button" class="mode-btn" id="stylusSmartModeBtn" onclick="toggleStylusSmartMode()" title="القلم يرسم والإصبع يمرر تلقائياً">
+                        ✒️ وضع القلم الذكي
                     </button>
                 </div>
             </div>
@@ -2384,14 +2526,6 @@
 
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-    });
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) handleFile(e.target.files[0]);
-    });
 
     function setPipelineStep(stepNumber) {
         for (let i = 1; i <= 4; i++) {
@@ -2410,56 +2544,104 @@
         document.getElementById('progressStatus').textContent = text;
     }
 
+    // استقبال ملف واحد أو عدة ملفات PDF ودمجها معاً
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) handleMultipleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) handleMultipleFiles(e.target.files);
+    });
+
     async function handleFile(file) {
-        if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-            showToast('⚠️ يرجى اختيار ملف بصيغة PDF فقط.', 'red');
+        return handleMultipleFiles([file]);
+    }
+
+    async function handleMultipleFiles(fileList) {
+        const validFiles = Array.from(fileList).filter(
+            f => f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf'
+        );
+        if (!validFiles.length) {
+            showToast('⚠️ يرجى اختيار ملفات بصيغة PDF فقط.', 'red');
             return;
         }
 
-        uploadedFileName = file.name.replace(/\.pdf$/i, '');
-        document.getElementById('fileNameDisplay').textContent = `تم اختيار: ${file.name}`;
+        uploadedFileName = validFiles.length === 1
+            ? validFiles[0].name.replace(/\.pdf$/i, '')
+            : `${validFiles[0].name.replace(/\.pdf$/i, '')}_Merged_${validFiles.length}Files`;
+
+        document.getElementById('fileNameDisplay').textContent = validFiles.length === 1
+            ? `تم اختيار: ${validFiles[0].name}`
+            : `📚 تم دمج ${validFiles.length} ملفات PDF معاً`;
+
         pageVisibilityObserver.disconnect();
-        document.getElementById('pagesContainer').innerHTML = '';
+        const container = document.getElementById('pagesContainer');
+        container.innerHTML = '';
         pagesData = [];
 
+        // إظهار قالب التحميل الذهبي (Skeleton Shimmer)
+        const shimmerEl = document.createElement('div');
+        shimmerEl.className = 'skeleton-card';
+        shimmerEl.innerHTML = `<div class="skeleton-shimmer-box"></div>`;
+        container.appendChild(shimmerEl);
+
         setPipelineStep(1);
-        updateProgress(5, 'جاري قراءة ملف الـ PDF وتجهيز المعاينة السريعة...');
+        updateProgress(5, 'جاري قراءة وتحليل ملفات الـ PDF...');
 
-        const arrayBuffer = await file.arrayBuffer();
+        const loadedPdfs = [];
+        let grandTotalPages = 0;
 
-        currentPdf = await pdfjsLib.getDocument({
-            data: arrayBuffer,
-            cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
-            cMapPacked: true,
-            standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',
-            disableFontFace: true,
-            useSystemFonts: false
-        }).promise;
-
-        const totalPages = currentPdf.numPages;
-        const previewScale = 1.15;
-
-        for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-            updateProgress(
-                ((pageNum - 1) / totalPages) * 100,
-                `معالجة صفحة ${pageNum} من ${totalPages}...`
-            );
-            await processSinglePagePreview(pageNum, totalPages, previewScale);
+        for (const f of validFiles) {
+            const arrayBuffer = await f.arrayBuffer();
+            const pdfDoc = await pdfjsLib.getDocument({
+                data: arrayBuffer,
+                cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                cMapPacked: true,
+                standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/standard_fonts/',
+                disableFontFace: true,
+                useSystemFonts: false
+            }).promise;
+            loadedPdfs.push({ pdfDoc, fileName: f.name, numPages: pdfDoc.numPages });
+            grandTotalPages += pdfDoc.numPages;
         }
 
+        currentPdf = loadedPdfs[0].pdfDoc;
+        const previewScale = 1.15;
+        let globalPageCounter = 0;
+
+        for (const item of loadedPdfs) {
+            for (let localNum = 1; localNum <= item.numPages; localNum++) {
+                globalPageCounter++;
+                updateProgress(
+                    ((globalPageCounter - 1) / grandTotalPages) * 100,
+                    `معالجة شريحة ${globalPageCounter} من ${grandTotalPages} (${item.fileName})...`
+                );
+                await processSinglePagePreview(
+                    globalPageCounter,
+                    grandTotalPages,
+                    previewScale,
+                    item.pdfDoc,
+                    localNum,
+                    item.numPages
+                );
+            }
+        }
+
+        shimmerEl.remove();
         setPipelineStep(5);
         updateIncludedPagesSummary();
-        updateProgress(100, `✅ اكتملت معالجة جميع الصفحات (${totalPages} صفحة) بنجاح! جاهز للطباعة.`);
+        updateProgress(100, `✅ اكتملت معالجة جميع الصفحات (${grandTotalPages} صفحة) بنجاح!`);
         document.getElementById('reprocessBtn').disabled = false;
         document.getElementById('downloadPdfBtn').disabled = false;
         document.getElementById('autoExcludeBtn').disabled = false;
         document.getElementById('selectAllPagesBtn').disabled = false;
         document.getElementById('previewA4Btn').disabled = false;
-        showToast(`🎉 تم تجهيز ${totalPages} صفحات بنجاح! يمكنك تكبير أي شريحة Fullscreen للتحديد الدقيق.`, 'green');
+        showToast(`🎉 تم تجهيز ${grandTotalPages} شريحة بنجاح! اضغط على أي مربع يدوي لحذفه فوراً.`, 'green');
     }
 
-    async function processSinglePagePreview(pageNum, totalPages, previewScale) {
-        const page = await currentPdf.getPage(pageNum);
+    async function processSinglePagePreview(pageNum, totalPages, previewScale, pdfDocInstance = currentPdf, srcPageNum = pageNum, srcTotalPages = totalPages) {
+        const page = await pdfDocInstance.getPage(srcPageNum);
         const viewport = page.getViewport({ scale: previewScale });
         const width = Math.floor(viewport.width);
         const height = Math.floor(viewport.height);
@@ -2478,6 +2660,10 @@
         const pageObj = {
             pageNum,
             totalPages,
+            srcPageNum,
+            srcTotalPages,
+            pdfDoc: pdfDocInstance,
+            isDemoSlide: false,
             width,
             height,
             cardEl: pageUI.card,
@@ -2502,6 +2688,119 @@
         pagesData.push(pageObj);
         pageVisibilityObserver.observe(pageUI.card);
         await runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
+    }
+
+    // توليد شريحة طبية تجريبية جاهزة بضغطة زر (Interactive Demo Slide)
+    async function loadInteractiveDemoSlide() {
+        pageVisibilityObserver.disconnect();
+        document.getElementById('pagesContainer').innerHTML = '';
+        pagesData = [];
+        uploadedFileName = 'MED26_Demo_Slide';
+        document.getElementById('fileNameDisplay').textContent = '🧪 شريحة طبية تجريبية (MED26 OSPE Demo)';
+
+        const width = 960, height = 540;
+        const pageUI = createPageCardUI(1, width, height);
+        document.getElementById('pagesContainer').appendChild(pageUI.card);
+        revealObserver.observe(pageUI.card);
+
+        drawDemoSlideGraphics(pageUI.origCanvas, width, height);
+
+        const pageObj = {
+            pageNum: 1,
+            totalPages: 1,
+            srcPageNum: 1,
+            srcTotalPages: 1,
+            pdfDoc: null,
+            isDemoSlide: true,
+            width,
+            height,
+            cardEl: pageUI.card,
+            includeCheckbox: pageUI.includeCheckbox,
+            includedInPrint: true,
+            inkSavedPercent: 93,
+            isVisible: true,
+            needsReprocess: false,
+            latestRenderToken: 0,
+            origWrapper: pageUI.origWrapper,
+            outWrapper: pageUI.outWrapper,
+            origCanvas: pageUI.origCanvas,
+            overlayCanvas: pageUI.overlayCanvas,
+            outCanvas: pageUI.outCanvas,
+            statsEl: pageUI.statsEl,
+            lineBlocks: [
+                { x: 420, y: 45, w: 480, h: 40 },
+                { x: 420, y: 125, w: 470, h: 32 },
+                { x: 420, y: 185, w: 460, h: 32 },
+                { x: 420, y: 245, w: 440, h: 32 }
+            ],
+            detectedImageBoxes: [],
+            autoEraseBoxes: [],
+            manualHistory: []
+        };
+
+        pagesData.push(pageObj);
+        await runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
+        document.getElementById('reprocessBtn').disabled = false;
+        document.getElementById('downloadPdfBtn').disabled = false;
+        document.getElementById('autoExcludeBtn').disabled = false;
+        document.getElementById('selectAllPagesBtn').disabled = false;
+        document.getElementById('previewA4Btn').disabled = false;
+        showToast('🧪 تم تحميل الشريحة التجريبية! جرب رسم مربع أو فتح الـ Fullscreen.', 'green');
+    }
+
+    function drawDemoSlideGraphics(canvas, w, h) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#141210';
+        ctx.fillRect(0, 0, w, h);
+
+        // بطاقة صورة هستولوجي تجريبية على اليسار
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(60, 70, 310, 340);
+        ctx.fillStyle = '#f43f5e';
+        ctx.beginPath();
+        ctx.arc(215, 220, 95, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#881337';
+        for (let i = 0; i < 14; i++) {
+            ctx.beginPath();
+            ctx.arc(160 + (i % 4) * 36, 170 + Math.floor(i / 4) * 34, 8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 18px Cairo, sans-serif';
+        ctx.fillText('Histology Specimen (H&E)', 105, 385);
+
+        // نصوص طبية بيضاء وملونة على الخلفية السوداء
+        ctx.fillStyle = '#ebd2a4';
+        ctx.font = 'bold 30px Cairo, sans-serif';
+        ctx.fillText('OSPE Station: Cardiac Muscle', 430, 85);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 21px Cairo, sans-serif';
+        ctx.fillText('• Striated, branched fibers with central nuclei', 430, 155);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('• Key Feature: Intercalated discs (Gap junctions)', 430, 215);
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('• Function: Synchronized myocardial contraction', 430, 275);
+
+        // شعار زاوية تجريبي لمسحه تلقائياً
+        ctx.fillStyle = '#cfa96b';
+        ctx.fillRect(20, h - 65, 130, 45);
+        ctx.fillStyle = '#141210';
+        ctx.font = 'bold 16px Cairo, sans-serif';
+        ctx.fillText('MED26 LOGO', 35, h - 37);
+    }
+
+    // التنقل بين الشرائح داخل نافذة الـ Fullscreen
+    function navigateZoomSlide(delta) {
+        if (!activeZoomPageNum || !pagesData.length) return;
+        const currentIndex = pagesData.findIndex(p => p.pageNum === activeZoomPageNum);
+        const nextIndex = currentIndex + delta;
+        if (nextIndex >= 0 && nextIndex < pagesData.length) {
+            openZoomEditorModal(pagesData[nextIndex].pageNum);
+        } else {
+            showToast('ℹ️ وصلت إلى نهاية الشرائح.', 'gold');
+        }
     }
 
     // تحديث عداد توفير الورق ونسبة توفير الحبر الأسود (Ink Saver Gauge)
@@ -2858,33 +3157,74 @@
             ctx.strokeRect(lb.x, lb.y, lb.w, lb.h);
         }
 
-        const manualProtect = pageObj.manualHistory
-            .filter(m => m.type === 'protect')
-            .map(m => ({ x: m.rx * pageObj.width, y: m.ry * pageObj.height, w: m.rw * pageObj.width, h: m.rh * pageObj.height }));
-
-        const allImgBoxes = [...pageObj.detectedImageBoxes, ...manualProtect];
         ctx.strokeStyle = '#10b981';
         ctx.fillStyle = 'rgba(16, 185, 129, 0.14)';
         ctx.lineWidth = 2.5;
-        for (const box of allImgBoxes) {
+        for (const box of pageObj.detectedImageBoxes) {
             ctx.fillRect(box.x, box.y, box.w, box.h);
             ctx.strokeRect(box.x, box.y, box.w, box.h);
         }
 
-        const manualErase = pageObj.manualHistory
-            .filter(m => m.type === 'erase')
-            .map(m => ({ x: m.rx * pageObj.width, y: m.ry * pageObj.height, w: m.rw * pageObj.width, h: m.rh * pageObj.height }));
-
-        const allEraseBoxes = [...pageObj.autoEraseBoxes, ...manualErase];
         ctx.strokeStyle = '#f43f5e';
         ctx.fillStyle = 'rgba(244, 63, 94, 0.22)';
         ctx.lineWidth = 2.5;
-        for (const box of allEraseBoxes) {
+        for (const box of pageObj.autoEraseBoxes) {
             ctx.fillRect(box.x, box.y, box.w, box.h);
             ctx.strokeRect(box.x, box.y, box.w, box.h);
         }
-    }
 
+        // رسم المربعات اليدوية مع أيقونة (×) للحذف الذكي عند الضغط عليها
+        for (const m of pageObj.manualHistory) {
+            const bx = m.rx * pageObj.width;
+            const by = m.ry * pageObj.height;
+            const bw = m.rw * pageObj.width;
+            const bh = m.rh * pageObj.height;
+
+            const isProt = m.type === 'protect';
+            ctx.strokeStyle = isProt ? '#10b981' : '#f43f5e';
+            ctx.fillStyle = isProt ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.25)';
+            ctx.lineWidth = 2.5;
+            ctx.fillRect(bx, by, bw, bh);
+            ctx.strokeRect(bx, by, bw, bh);
+
+            // شارة الحذف السريع × في الزاوية
+            const badgeSize = 18;
+            ctx.fillStyle = isProt ? '#059669' : '#e11d48';
+            ctx.fillRect(bx + bw - badgeSize, by, badgeSize, badgeSize);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('×', bx + bw - badgeSize / 2, by + badgeSize / 2);
+        }
+    }
+let isStylusSmartMode = false;
+    let lastDetectedPointerType = 'mouse';
+
+    window.addEventListener('pointerdown', (e) => {
+        lastDetectedPointerType = e.pointerType || 'mouse';
+        if (e.pointerType === 'pen' && !isStylusSmartMode) {
+            isStylusSmartMode = true;
+            const btn = document.getElementById('stylusSmartModeBtn');
+            if (btn) btn.classList.add('active-stylus');
+            showToast('✒️ تم التعرف على القلم الذكي تلقائياً! القلم للرسم والإصبع للتمرير.', 'green');
+        }
+    }, true);
+
+    function toggleStylusSmartMode() {
+        isStylusSmartMode = !isStylusSmartMode;
+        const btn = document.getElementById('stylusSmartModeBtn');
+        if (btn) btn.classList.toggle('active-stylus', isStylusSmartMode);
+        if (isStylusSmartMode && currentMouseMode === 'scroll') {
+            setTouchMouseMode('protect');
+        }
+        showToast(
+            isStylusSmartMode
+                ? '✒️ تم تفعيل وضع القلم الذكي: القلم يرسم المربعات، والإصبع يمرر الصفحة تلقائياً!'
+                : '🖐️ تم إيقاف وضع القلم الذكي: اللمس بالإصبع يرسم كالمعتاد.',
+            'gold'
+        );
+    }
     let activeDragState = null;
     let activeSliderDrag = null;
     let zoomPinchState = null;
@@ -2914,7 +3254,24 @@
 
     function handleGlobalStart(e) {
         const zoomViewport = document.getElementById('zoomViewport');
+const isPenInput =
+            lastDetectedPointerType === 'pen' ||
+            (e.touches && e.touches[0] && e.touches[0].touchType === 'stylus');
 
+        // في وضع القلم الذكي: إذا لمس الطالب الشاشة بإصبعه (وليس القلم) يتم تمرير الصفحة تلقائياً
+        if (isStylusSmartMode && e.touches && e.touches.length === 1 && !isPenInput) {
+            if (activeZoomPageNum && e.target.closest('#zoomViewport')) {
+                if (e.cancelable) e.preventDefault();
+                const pt = getClientXY(e);
+                zoomPanState = {
+                    startX: pt.x,
+                    startY: pt.y,
+                    scrollLeft: zoomViewport.scrollLeft,
+                    scrollTop: zoomViewport.scrollTop
+                };
+            }
+            return;
+        }
         // 1. لمس الشاشة بأصبعين داخل نافذة الزوم -> تقريب وإبعاد وتحريك فوري (Pinch-to-Zoom & 2-Finger Pan)
         if (activeZoomPageNum && e.touches && e.touches.length >= 2 && e.target.closest('#zoomEditorModal')) {
             if (e.cancelable) e.preventDefault();
@@ -3144,6 +3501,20 @@
             lastEditedPageNum = pageObj.pageNum;
             pageObj.needsReprocess = false;
             runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
+        } else {
+            // الحذف الذكي: عند الضغط ضغطة خفيفة فوق أي مربع يدوي سابق يتم حذفه وحده فوراً
+            const clickRx = clampedX0 / rect.width;
+            const clickRy = clampedY0 / rect.height;
+            for (let i = pageObj.manualHistory.length - 1; i >= 0; i--) {
+                const m = pageObj.manualHistory[i];
+                if (clickRx >= m.rx && clickRx <= m.rx + m.rw && clickRy >= m.ry && clickRy <= m.ry + m.rh) {
+                    pageObj.manualHistory.splice(i, 1);
+                    pageObj.needsReprocess = false;
+                    runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
+                    showToast('🗑️ تم حذف المربع المحدد بنجاح!', 'gold');
+                    break;
+                }
+            }
         }
     }
 
@@ -3459,9 +3830,36 @@
         document.getElementById('nextA4SheetBtn').disabled = currentA4PreviewSheetIndex >= totalSheets - 1;
     }
 
+    let lastExportedPdfBlob = null;
+    let lastExportedPdfFileName = '';
+
     async function renderSinglePageUltraHD(pageObj) {
-        const exportScale = upscaleTextCheckbox.checked ? 2.4 : 1.8;
-        const page = await currentPdf.getPage(pageObj.pageNum);
+        const compMode = document.getElementById('pdfCompressionMode')?.value || 'print_300dpi';
+        const exportScale = compMode === 'telegram_lite'
+            ? 1.35
+            : (upscaleTextCheckbox.checked ? 2.4 : 1.8);
+
+        if (pageObj.isDemoSlide) {
+            const w = Math.floor(pageObj.width * exportScale);
+            const h = Math.floor(pageObj.height * exportScale);
+            sharedExportOrigCanvas.width = w;
+            sharedExportOrigCanvas.height = h;
+            const ctx = sharedExportOrigCanvas.getContext('2d', { willReadFrequently: true });
+            ctx.save();
+            ctx.scale(exportScale, exportScale);
+            ctx.drawImage(pageObj.origCanvas, 0, 0);
+            ctx.restore();
+            const hiResImageData = ctx.getImageData(0, 0, w, h);
+            sharedExportOutCanvas.width = w;
+            sharedExportOutCanvas.height = h;
+            await runReconstructionOnCanvas(pageObj, hiResImageData, sharedExportOutCanvas, true);
+            sharedExportOrigCanvas.width = 1;
+            sharedExportOrigCanvas.height = 1;
+            return sharedExportOutCanvas;
+        }
+
+        const pdfInstance = pageObj.pdfDoc || currentPdf;
+        const page = await pdfInstance.getPage(pageObj.srcPageNum || pageObj.pageNum);
         const viewport = page.getViewport({ scale: exportScale });
         const w = Math.floor(viewport.width);
         const h = Math.floor(viewport.height);
@@ -3483,6 +3881,49 @@
         return sharedExportOutCanvas;
     }
 
+    function showSuccessSummaryModal(pdfInstance, finalFileName, slidesCount, layoutMode) {
+        const totalSheets = Math.ceil(slidesCount / layoutMode);
+        const includedPages = pagesData.filter(p => p.includedInPrint);
+        const avgInkSaved = includedPages.length > 0
+            ? Math.round(includedPages.reduce((acc, p) => acc + (p.inkSavedPercent || 91), 0) / includedPages.length)
+            : 91;
+
+        try {
+            lastExportedPdfBlob = pdfInstance.output('blob');
+            lastExportedPdfFileName = finalFileName;
+            const sizeMB = (lastExportedPdfBlob.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('statFileSize').textContent = `${sizeMB} MB`;
+        } catch (e) {
+            document.getElementById('statFileSize').textContent = 'جاهز';
+        }
+
+        document.getElementById('successFileNameText').textContent =
+            `تم اختصار ${slidesCount} شريحة في ${totalSheets} ورقة A4 (${finalFileName})`;
+        document.getElementById('statInkSaved').textContent = `${avgInkSaved}%`;
+        document.getElementById('statSheetsCount').textContent = `${totalSheets}`;
+        document.getElementById('successSummaryModal').classList.add('open');
+    }
+
+    function closeSuccessSummaryModal() {
+        document.getElementById('successSummaryModal').classList.remove('open');
+    }
+
+    async function shareLastExportedPDF() {
+        if (!lastExportedPdfBlob) return;
+        const file = new File([lastExportedPdfBlob], lastExportedPdfFileName, { type: 'application/pdf' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    title: lastExportedPdfFileName,
+                    text: 'ملخص أبيض جاهز للطباعة والمذاكرة - MED26',
+                    files: [file]
+                });
+            } catch (e) {}
+        } else {
+            showToast('📥 تم تحميل الملف في جهازك وجاهز للإرسال مباشرة!', 'gold');
+        }
+    }
+
     function clearSharedExportCanvases() {
         sharedExportOrigCanvas.width = 1;
         sharedExportOrigCanvas.height = 1;
@@ -3490,7 +3931,7 @@
         sharedExportOutCanvas.height = 1;
     }
 
-    // تصدير ملف الـ PDF النهائي
+    // تصدير ملف الـ PDF النهائي مع إظهار بطاقة ملخص الإنجاز
     async function exportPrintablePDF() {
         const includedPages = pagesData.filter(p => p.includedInPrint);
         if (!includedPages.length) {
@@ -3508,7 +3949,8 @@
             const isCornellNotes = rawLayoutVal === '2_notes';
             const layoutMode = isCornellNotes ? 2 : parseInt(rawLayoutVal, 10);
             const isUpscale = upscaleTextCheckbox.checked;
-            const jpegQuality = isUpscale ? 0.96 : 0.92;
+            const compMode = document.getElementById('pdfCompressionMode')?.value || 'print_300dpi';
+            const jpegQuality = compMode === 'telegram_lite' ? 0.72 : (isUpscale ? 0.96 : 0.92);
 
             if (layoutMode === 1 && !isCornellNotes) {
                 let pdf = null;
@@ -3539,7 +3981,9 @@
                 }
 
                 clearSharedExportCanvases();
-                pdf.save(`${uploadedFileName}_White_Printable.pdf`);
+                const outName = `${uploadedFileName}_White_Printable.pdf`;
+                showSuccessSummaryModal(pdf, outName, includedPages.length, 1);
+                pdf.save(outName);
             } else if (isCornellNotes) {
                 const pdf = new jsPDF({
                     orientation: 'portrait',
@@ -3607,7 +4051,9 @@
                 }
 
                 clearSharedExportCanvases();
-                pdf.save(`${uploadedFileName}_White_CornellNotes_A4.pdf`);
+                const outName = `${uploadedFileName}_White_CornellNotes_A4.pdf`;
+                showSuccessSummaryModal(pdf, outName, includedPages.length, 2);
+                pdf.save(outName);
             } else {
                 const isLandscapeA4 = layoutMode === 4;
                 const pdf = new jsPDF({
@@ -3669,7 +4115,9 @@
                 }
 
                 clearSharedExportCanvases();
-                pdf.save(`${uploadedFileName}_White_${layoutMode}in1_A4.pdf`);
+                const outName = `${uploadedFileName}_White_${layoutMode}in1_A4.pdf`;
+                showSuccessSummaryModal(pdf, outName, includedPages.length, layoutMode);
+                pdf.save(outName);
             }
 
             updateProgress(100, '✅ تم تصدير وتحميل ملف الـ PDF بنجاح!');
