@@ -1,1426 +1,203 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>محول الملخصات الذكي للطباعة | MED26</title>
-	<link rel="icon" type="image/png" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
-    
-    <!-- خط كايرو المعتمد في المنصة -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- مكتبة PDF.js لقراءة وتحليل ملفات الـ PDF بدقة المتجهات (Vectors) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    
-    <!-- مكتبة jsPDF لتصدير ملف PDF جديد جاهز للطباعة -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
-        /* الهوية البصرية الفخمة المطابقة لمنصة MED26 OSPE (محسنة للسرعة القصوى 60FPS) */
         :root {
-            --bg-main: #141210;
-            --bg-secondary: #1e1b17;
-            --bg-card: #24201b;
-            --bg-input: #161310;
-            --text-main: #f7f4ef;
-            --text-muted: #c4baa8;
-            --gold-bright: #ebd2a4;
-            --gold-primary: #cfa96b;
-            --border-color: rgba(207, 169, 107, 0.38);
-            --accent-green: #10b981;
-            --danger-red: #f43f5e;
+            --bg-main: #141210; --bg-secondary: #1e1b17; --bg-card: #24201b; --bg-input: #161310;
+            --text-main: #f7f4ef; --text-muted: #c4baa8; --gold-bright: #ebd2a4; --gold-primary: #cfa96b;
+            --border-color: rgba(207, 169, 107, 0.38); --accent-green: #10b981; --danger-red: #f43f5e;
             --sticky-top-offset: 72px;
         }
-
-        body.header-is-hidden {
-            --sticky-top-offset: 10px;
-        }
-
+        body.header-is-hidden { --sticky-top-offset: 10px; }
         body.light-mode {
-            --bg-main: #f6f3ec;
-            --bg-secondary: #ebe5d8;
-            --bg-card: #ffffff;
-            --bg-input: #f9f6f0;
-            --text-main: #1f1c18;
-            --text-muted: #5c5346;
-            --gold-bright: #8c6528;
-            --gold-primary: #a67c38;
+            --bg-main: #f6f3ec; --bg-secondary: #ebe5d8; --bg-card: #ffffff; --bg-input: #f9f6f0;
+            --text-main: #1f1c18; --text-muted: #5c5346; --gold-bright: #8c6528; --gold-primary: #a67c38;
             --border-color: rgba(166, 124, 56, 0.35);
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Cairo', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow-x: hidden;
-        }
-
-        /* الخلفية الطبوغرافية الخفيفة */
-        #bg-Stage {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-
-        /* مربع التحديد العالمي العائم */
-        #global-selection-marquee {
-            position: fixed;
-            pointer-events: none;
-            z-index: 1000005;
-            display: none;
-            border: 3px dashed #10b981;
-            background: rgba(16, 185, 129, 0.22);
-            border-radius: 6px;
-            will-change: left, top, width, height;
-        }
-
-        /* حاوية الإشعارات الذهبية العائمة (Gold Toast Notifications) */
-        #toast-container {
-            position: fixed;
-            top: 18px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000010;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-            width: min(92vw, 480px);
-        }
-
-        .gold-toast {
-            pointer-events: auto;
-            background: rgba(30, 27, 23, 0.96);
-            backdrop-filter: blur(10px);
-            border: 1.5px solid var(--gold-primary);
-            color: var(--text-main);
-            padding: 12px 18px;
-            border-radius: 16px;
-            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.85rem;
-            font-weight: 800;
-            animation: toastSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        body.light-mode .gold-toast {
-            background: rgba(255, 255, 255, 0.96);
-        }
-
-        .gold-toast.toast-green {
-            border-color: var(--accent-green);
-        }
-
-        .gold-toast.toast-red {
-            border-color: var(--danger-red);
-        }
-
-        .gold-toast.toast-hide {
-            animation: toastSlideOut 0.25s ease forwards;
-        }
-
-        @keyframes toastSlideIn {
-            from { opacity: 0; transform: translateY(-22px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @keyframes toastSlideOut {
-            from { opacity: 1; transform: translateY(0) scale(1); }
-            to { opacity: 0; transform: translateY(-18px) scale(0.95); }
-        }
-
-        /* الهيدر العلوي (يختفي تلقائياً عند النزول لأسفل ولا يعود إلا في أعلى الصفحة) */
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 45;
-            background: var(--bg-secondary);
-            border-bottom: 1.5px solid var(--border-color);
-            padding: 14px 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
-            will-change: transform;
-        }
-
-        header.header-hidden {
-            transform: translateY(-110%);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .header-inner {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .brand-title h1 {
-            font-size: clamp(1.15rem, 3vw, 1.65rem);
-            font-weight: 900;
-            color: var(--text-main);
-        }
-
-        .gold-badge {
-            background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%);
-            color: #181512;
-            font-weight: 900;
-            font-size: 0.72rem;
-            padding: 2px 10px;
-            border-radius: 999px;
-        }
-
-        .brand-sub {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            font-weight: 700;
-        }
-
-        /* الأزرار والبطاقات الذهبية */
-        .app-card {
-            background-color: var(--bg-card);
-            border: 1.5px solid var(--border-color);
-            border-radius: 22px;
-            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.3);
-            position: relative;
-        }
-
-        .gold-btn {
-            background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%);
-            color: #181512;
-            font-weight: 900;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.15s ease, opacity 0.15s ease;
-        }
-
-        .gold-btn:hover:not(:disabled), .gold-btn:active:not(:disabled) {
-            background: linear-gradient(135deg, #f0d7a8 0%, #c9a05c 100%);
-            transform: translateY(-1px);
-        }
-
-        .pill-btn {
-            background-color: var(--bg-secondary);
-            border: 1.5px solid var(--border-color);
-            color: var(--text-main);
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-        }
-
-        .pill-btn:hover:not(:disabled), .pill-btn.active {
-            background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%);
-            color: #181512;
-            border-color: transparent;
-            font-weight: 800;
-        }
-
-        .kbd-tag {
-            font-size: 0.65rem;
-            padding: 1px 5px;
-            border-radius: 4px;
-            background: rgba(0, 0, 0, 0.28);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            margin-right: 4px;
-            font-family: monospace;
-        }
-
-        .kw-highlight {
-            background: rgba(207, 169, 107, 0.2);
-            color: var(--gold-bright);
-            padding: 1px 8px;
-            border-radius: 6px;
-            font-weight: 800;
-            border: 1px solid rgba(207, 169, 107, 0.42);
-            display: inline-block;
-        }
-
-        .container {
-            max-width: 1400px;
-            width: 95%;
-            margin: 22px auto;
-            position: relative;
-            z-index: 10;
-            flex-grow: 1;
-        }
-
-        /* أنميشن الصعود والنزول الانسيابي */
-        .scroll-reveal {
-            opacity: 0;
-            will-change: transform, opacity;
-            transition: opacity 0.48s cubic-bezier(0.22, 1, 0.36, 1), transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .scroll-reveal.reveal-from-bottom {
-            transform: translateY(32px) scale(0.985);
-        }
-
-        .scroll-reveal.reveal-from-top {
-            transform: translateY(-32px) scale(0.985);
-        }
-
-        .scroll-reveal.in-view {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
-        /* شريط المراحل الأربع */
-        .pipeline-steps {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 850px) {
-            .pipeline-steps {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        .step-card {
-            background: var(--bg-card);
-            border: 1.5px solid var(--border-color);
-            border-radius: 16px;
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.25s ease;
-        }
-
-        .step-card.active {
-            border-color: var(--gold-bright);
-            background: rgba(207, 169, 107, 0.15);
-        }
-
-        .step-card.done {
-            border-color: var(--accent-green);
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        .step-num {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: var(--bg-secondary);
-            color: var(--gold-bright);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-            border: 1px solid var(--border-color);
-        }
-
-        .step-card.active .step-num {
-            background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%);
-            color: #181512;
-        }
-
-        .step-card.done .step-num {
-            background: var(--accent-green);
-            color: #06281e;
-            border-color: var(--accent-green);
-        }
-
-        .step-info h4 {
-            font-size: 0.84rem;
-            font-weight: 800;
-            color: var(--text-main);
-        }
-
-        .step-info span {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            display: block;
-        }
-
-        /* شبكة الرفع والإعدادات */
-        .top-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.45fr;
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 960px) {
-            .top-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .panel {
-            padding: 20px;
-        }
-
-        .panel-title {
-            font-size: 1rem;
-            font-weight: 900;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            color: var(--gold-bright);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-
-        /* صندوق رفع الملف */
-        .upload-zone {
-            border: 2px dashed var(--gold-primary);
-            border-radius: 18px;
-            padding: 32px 16px;
-            text-align: center;
-            cursor: pointer;
-            background: var(--bg-secondary);
-            min-height: 250px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.2s ease;
-        }
-
-        .upload-zone:hover, .upload-zone.dragover {
-            border-color: var(--gold-bright);
-            background: rgba(207, 169, 107, 0.12);
-            transform: scale(1.005);
-        }
-
-        .upload-icon {
-            font-size: 2.6rem;
-            margin-bottom: 8px;
-        }
-
-        .upload-zone h3 {
-            font-size: 1rem;
-            font-weight: 800;
-            margin-bottom: 6px;
-            color: var(--text-main);
-        }
-
-        .upload-zone p {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        /* خيار "أفضل الإعدادات التلقائية" الذهبي */
-        .best-preset-banner {
-            background: linear-gradient(135deg, rgba(207, 169, 107, 0.22) 0%, rgba(184, 143, 77, 0.10) 100%);
-            border: 2px solid var(--gold-primary);
-            border-radius: 14px;
-            padding: 10px 15px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            cursor: pointer;
-        }
-
-        .best-preset-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.88rem;
-            font-weight: 900;
-            color: var(--gold-bright);
-            cursor: pointer;
-        }
-
-        .best-preset-label input {
-            width: 19px;
-            height: 19px;
-            accent-color: #cfa96b;
-            cursor: pointer;
-        }
-
-        /* صف تخطيط الصفحة ومعاينة الـ A4 */
-        .layout-Quick-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: stretch;
-            margin-bottom: 10px;
-        }
-
-        .layout-Quick-row .control-group {
-            flex: 1;
-            min-width: 240px;
-        }
-
-        /* قائمة طي الإعدادات المتقدمة (Clean UI Accordion) */
-        .accordion-toggle-btn {
-            width: 100%;
-            background: var(--bg-secondary);
-            border: 1.5px solid var(--border-color);
-            color: var(--gold-bright);
-            padding: 9px 14px;
-            border-radius: 12px;
-            font-size: 0.82rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 8px;
-            transition: background 0.2s ease;
-        }
-
-        .accordion-toggle-btn:hover {
-            background: rgba(207, 169, 107, 0.14);
-        }
-
-        .advanced-accordion-body {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, margin-top 0.25s ease;
-            opacity: 0;
-        }
-
-        .advanced-accordion-body.open {
-            max-height: 520px;
-            opacity: 1;
-            margin-top: 10px;
-        }
-
-        /* عناصر التحكم */
-        .controls-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        @media (max-width: 600px) {
-            .controls-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .control-group {
-            background: var(--bg-secondary);
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .control-group label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.78rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: var(--text-main);
-        }
-
-        .control-group input[type="range"] {
-            width: 100%;
-            accent-color: var(--gold-primary);
-            cursor: pointer;
-        }
-
-        .control-group select {
-            width: 100%;
-            background: var(--bg-input);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            outline: none;
-            cursor: pointer;
-        }
-
-        /* صندوق Upscale المميز */
-        .upscale-banner {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1.5px solid rgba(56, 189, 248, 0.45);
-            border-radius: 12px;
-            padding: 9px 14px;
-            margin-top: 8px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .upscale-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: #7dd3fc;
-            cursor: pointer;
-        }
-
-        body.light-mode .upscale-label {
-            color: #0369a1;
-        }
-
-        .upscale-label input {
-            width: 18px;
-            height: 18px;
-            accent-color: #0284c7;
-            cursor: pointer;
-        }
-
-        .options-row {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-top: 10px;
-            padding: 10px 14px;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            color: var(--text-main);
-        }
-
-        .checkbox-group input {
-            width: 17px;
-            height: 17px;
-            accent-color: var(--gold-primary);
-            cursor: pointer;
-        }
-
-        /* شريط إدارة الصفحات وعداد توفير الحبر الأسود (Ink Saver Gauge) */
-        .paper-saver-bar {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 10px;
-            padding: 11px 14px;
-            background: rgba(16, 185, 129, 0.08);
-            border: 1.5px solid rgba(16, 185, 129, 0.35);
-            border-radius: 12px;
-        }
-
-        .paper-saver-top {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .paper-saver-info {
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: #6ee7b7;
-        }
-
-        body.light-mode .paper-saver-info {
-            color: #065f46;
-        }
-
-        .ink-gauge-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.76rem;
-            font-weight: 800;
-            color: var(--gold-bright);
-        }
-
-        .ink-gauge-track {
-            flex: 1;
-            height: 7px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 99px;
-            overflow: hidden;
-            border: 1px solid rgba(16, 185, 129, 0.35);
-        }
-
-        .ink-gauge-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #10b981, #34d399, #cfa96b);
-            transition: width 0.35s ease;
-        }
-
-        .paper-saver-btns {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        /* أزرار التنفيذ والتحميل */
-        .actions-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .btn {
-            padding: 12px 18px;
-            border-radius: 14px;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-        }
-
-        .btn-refresh {
-            flex: 1;
-            min-width: 130px;
-        }
-
-        .btn-download {
-            flex: 1.8;
-            min-width: 220px;
-            font-size: 0.95rem;
-            box-shadow: 0 6px 20px rgba(207, 169, 107, 0.28);
-        }
-
-        /* شريط التقدم */
-        .progress-wrapper {
-            display: none;
-            padding: 14px 18px;
-            margin-bottom: 18px;
-        }
-
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: var(--gold-bright);
-        }
-
-        .progress-track {
-            width: 100%;
-            height: 10px;
-            background: var(--bg-secondary);
-            border-radius: 999px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #cfa96b, #10b981);
-            transition: width 0.2s;
-        }
-
-        /* القائمة المصغرة والثابتة أعلى الشاشة مع النزول */
-        .unified-sticky-dock {
-            position: sticky;
-            top: var(--sticky-top-offset, 68px);
-            z-index: 95;
-            width: fit-content;
-            max-width: 96%;
-            margin: 0 auto 16px auto;
-            padding: 6px 12px;
-            background: rgba(30, 27, 23, 0.94);
-            backdrop-filter: blur(12px);
-            border: 1.5px solid var(--border-color);
-            border-radius: 14px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-            transition: top 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        body.light-mode .unified-sticky-dock {
-            background: rgba(255, 255, 255, 0.95);
-        }
-
-        .dock-tools-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.72rem;
-        }
-
-        .legend-items {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .legend-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-weight: 700;
-        }
-
-        .dot-img {
-            width: 10px;
-            height: 10px;
-            background: rgba(16, 185, 129, 0.3);
-            border: 2px solid #10b981;
-            display: inline-block;
-            border-radius: 3px;
-        }
-
-        .dot-erase {
-            width: 10px;
-            height: 10px;
-            background: rgba(244, 63, 94, 0.3);
-            border: 2px solid #f43f5e;
-            display: inline-block;
-            border-radius: 3px;
-        }
-
-        .mouse-mode-switch {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            background: var(--bg-secondary);
-            padding: 3px;
-            border-radius: 9px;
-            border: 1px solid var(--border-color);
-        }
-
-        .mode-btn {
-            padding: 4px 8px;
-            border-radius: 7px;
-            border: 1px solid transparent;
-            font-size: 0.71rem;
-            font-weight: 800;
-            cursor: pointer;
-            background: transparent;
-            color: var(--text-muted);
-        }
-
-        .mode-btn.active-protect {
-            background: rgba(16, 185, 129, 0.22);
-            color: #34d399;
-            border-color: #10b981;
-        }
-
-        .mode-btn.active-erase {
-            background: rgba(244, 63, 94, 0.22);
-            color: #fb7185;
-            border-color: #f43f5e;
-        }
-
-        .mode-btn.active-scroll {
-            background: rgba(207, 169, 107, 0.24);
-            color: var(--gold-bright);
-            border-color: var(--gold-primary);
-        }
-
-        /* قائمة الصفحات المعالجة */
-        .pages-list {
-            display: flex;
-            flex-direction: column;
-            gap: 22px;
-        }
-
-        .page-item {
-            overflow: hidden;
-            content-visibility: auto;
-            contain-intrinsic-size: 460px;
-        }
-
-        .page-item.excluded-page {
-            opacity: 0.45;
-            border-color: rgba(244, 63, 94, 0.45);
-        }
-
-        .page-header {
-            background: var(--bg-secondary);
-            padding: 12px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .page-title {
-            font-weight: 900;
-            color: var(--gold-bright);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .include-page-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: var(--bg-card);
-            border: 1.5px solid var(--border-color);
-            padding: 4px 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: var(--text-main);
-            user-select: none;
-        }
-
-        .include-page-label input {
-            width: 17px;
-            height: 17px;
-            accent-color: var(--accent-green);
-            cursor: pointer;
-        }
-
-        .stats-pill {
-            font-size: 0.74rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 3px 10px;
-            border-radius: 99px;
-            color: var(--text-muted);
-            font-weight: 700;
-        }
-
-        .page-tools {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.74rem;
-            border-radius: 9px;
-        }
-
-        .btn-zoom-highlight {
-            background: rgba(56, 189, 248, 0.16);
-            border: 1.5px solid rgba(56, 189, 248, 0.55);
-            color: #7dd3fc;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        body.light-mode .btn-zoom-highlight {
-            color: #0369a1;
-        }
-
-        .btn-zoom-highlight:hover {
-            background: #0284c7;
-            color: #ffffff;
-        }
-
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            padding: 18px;
-            cursor: crosshair;
-            user-select: none;
-            -webkit-user-select: none;
-            position: relative;
-        }
-
-        @media (max-width: 920px) {
-            .comparison-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* وضع المقارنة بالسحب (Before/After Slider Mode) */
-        .comparison-grid.slider-compare-mode {
-            display: block;
-            position: relative;
-            max-width: 820px;
-            margin: 0 auto;
-        }
-
-        .comparison-grid.slider-compare-mode .out-canvas-box {
-            position: absolute;
-            top: 18px;
-            left: 18px;
-            right: 18px;
-            bottom: 18px;
-            pointer-events: none;
-            z-index: 4;
-            clip-path: inset(0 0 0 var(--ba-pos, 50%));
-        }
-
-        .ba-slider-bar {
-            display: none;
-            position: absolute;
-            top: 52px;
-            bottom: 18px;
-            left: calc(18px + (100% - 36px) * var(--ba-ratio, 0.5));
-            width: 4px;
-            background: linear-gradient(180deg, #ebd2a4, #10b981);
-            z-index: 8;
-            cursor: ew-resize;
-            touch-action: none;
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.65);
-        }
-
-        .comparison-grid.slider-compare-mode .ba-slider-bar {
-            display: block;
-        }
-
-        .ba-slider-knob {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%);
-            color: #181512;
-            font-weight: 900;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-            border: 2px solid #fff;
-        }
-
-        .canvas-box {
-            background: var(--bg-secondary);
-            border: 1.5px solid var(--border-color);
-            border-radius: 14px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .canvas-label {
-            padding: 8px 12px;
-            font-size: 0.75rem;
-            font-weight: 800;
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .canvas-label.white-label {
-            background: rgba(16, 185, 129, 0.16);
-            color: #6ee7b7;
-            border-bottom: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        body.light-mode .canvas-label.white-label {
-            color: #065f46;
-        }
-
-        .canvas-wrapper {
-            position: relative;
-            width: 100%;
-            line-height: 0;
-            cursor: crosshair;
-            background: #ffffff;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        .canvas-wrapper.drawing-active {
-            touch-action: none;
-        }
-
-        .canvas-wrapper.scroll-active {
-            touch-action: pan-y pinch-zoom;
-            cursor: grab;
-        }
-
-        .canvas-wrapper canvas {
-            width: 100%;
-            height: auto;
-            display: block;
-            pointer-events: none;
-        }
-
-        .overlay-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        /* نافذة المعاينة الحية لورقة الـ A4 + نافذة التكبير Fullscreen للتحديد الدقيق */
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(10, 9, 8, 0.86);
-            backdrop-filter: blur(8px);
-            z-index: 99990;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 14px;
-        }
-
-        .modal-backdrop.open {
-            display: flex;
-        }
-
-        .a4-modal-card {
-            background: var(--bg-card);
-            border: 2px solid var(--gold-primary);
-            border-radius: 22px;
-            max-width: 780px;
-            width: 100%;
-            max-height: 92vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 22px 50px rgba(0, 0, 0, 0.65);
-        }
-
-        /* نافذة التكبير والتحديد الدقيق بملء الشاشة (Fullscreen Zoom Editor) */
-        .zoom-editor-card {
-            background: var(--bg-card);
-            border: 2px solid var(--gold-primary);
-            border-radius: 20px;
-            width: 97vw;
-            height: 94vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
-        }
-
-        .zoom-toolbar {
-            padding: 10px 16px;
-            background: var(--bg-secondary);
-            border-bottom: 1.5px solid var(--border-color);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .zoom-controls-group {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .zoom-viewport {
-            flex: 1;
-            overflow: auto;
-            background: #0d0c0a;
-            display: flex;
-            padding: 20px;
-            position: relative;
-            direction: ltr;
-            -webkit-overflow-scrolling: touch;
-            touch-action: none;
-        }
-
-        .zoom-stage-inner {
-            position: relative;
-            margin: auto;
-            background: #ffffff;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
-            border-radius: 8px;
-            overflow: hidden;
-            line-height: 0;
-            flex-shrink: 0;
-            will-change: width, height;
-        }
-
-        .a4-modal-header {
-            padding: 14px 18px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .a4-modal-body {
-            padding: 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.25);
-        }
-
-        .a4-modal-body canvas {
-            max-width: 100%;
-            max-height: 64vh;
-            width: auto;
-            height: auto;
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-        }
-
-        .a4-modal-footer {
-            padding: 12px 18px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* أزرار الصعود والنزول العائمة */
-        .floating-scroll-btns {
-            position: fixed;
-            bottom: 22px;
-            left: 20px;
-            z-index: 80;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .float-nav-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: var(--bg-card);
-            border: 1.5px solid var(--gold-primary);
-            color: var(--gold-bright);
-            font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s ease, background 0.2s ease;
-        }
-
-        .float-nav-btn:hover {
-            transform: translateY(-2px);
-            background: var(--gold-primary);
-            color: #181512;
-        }
-
-        /* الفوتر والشريط المتحرك */
-        footer {
-            border-top: 1.5px solid var(--border-color);
-            background: var(--bg-secondary);
-            margin-top: 40px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .footer-marquee-wrap {
-            width: 100%;
-            overflow: hidden;
-            background: linear-gradient(90deg, rgba(20, 18, 16, 0.96) 0%, rgba(44, 38, 30, 0.88) 50%, rgba(20, 18, 16, 0.96) 100%);
-            border-bottom: 1px solid var(--border-color);
-            padding: 9px 0;
-            direction: ltr;
-        }
-
-        body.light-mode .footer-marquee-wrap {
-            background: linear-gradient(90deg, #ebe5d8 0%, #dfd5c3 50%, #ebe5d8 100%);
-        }
-
-        .footer-marquee-track {
-            display: flex;
-            width: max-content;
-            animation: scrollRightToLeft 34s linear infinite;
-        }
-
-        @keyframes scrollRightToLeft {
-            0% { transform: translateX(-50%); }
-            100% { transform: translateX(0%); }
-        }
-
-        .footer-bottom {
-            max-width: 1400px;
-            width: 95%;
-            margin: 0 auto;
-            padding: 16px 0;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.85rem;
-            font-weight: 800;
-        }
-
-        @media (max-width: 600px) {
-            .footer-bottom {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
-		/* 1. تأثير التحميل الذهبي (Skeleton Shimmer) */
-        .skeleton-card {
-            background: var(--bg-card);
-            border: 1.5px solid var(--border-color);
-            border-radius: 22px;
-            padding: 18px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .skeleton-shimmer-box {
-            height: 260px;
-            border-radius: 14px;
-            background: linear-gradient(90deg, rgba(30,27,23,0.9) 25%, rgba(207,169,107,0.18) 50%, rgba(30,27,23,0.9) 75%);
-            background-size: 200% 100%;
-            animation: goldShimmer 1.4s infinite linear;
-        }
-
-        @keyframes goldShimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        /* 2. زر الشريحة التجريبية + شارة القلم الذكي */
-        .demo-slide-btn {
-            margin-top: 10px;
-            width: 100%;
-            padding: 9px 14px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 800;
-            background: rgba(207, 169, 107, 0.12);
-            border: 1.5px dashed var(--gold-primary);
-            color: var(--gold-bright);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .demo-slide-btn:hover {
-            background: rgba(207, 169, 107, 0.24);
-            transform: translateY(-1px);
-        }
-
-        .mode-btn.active-stylus {
-            background: rgba(56, 189, 248, 0.22);
-            color: #7dd3fc;
-            border-color: #38bdf8;
-        }
-
-        /* 3. بطاقة ملخص الإنجاز الفخمة بعد التحميل (Success Summary Card) */
-        .success-summary-card {
-            background: var(--bg-card);
-            border: 2px solid var(--gold-primary);
-            border-radius: 24px;
-            max-width: 480px;
-            width: 100%;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
-            animation: toastSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .success-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 18px 0;
-        }
-
-        .success-stat-box {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 12px 8px;
-        }
-
-        .success-stat-box strong {
-            display: block;
-            font-size: 1.2rem;
-            font-weight: 900;
-            color: var(--gold-bright);
-        }
-
-        .success-stat-box span {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            font-weight: 700;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        body { background-color: var(--bg-main); color: var(--text-main); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; overflow-x: hidden; }
+        #bg-Stage { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; overflow: hidden; }
+        #global-selection-marquee { position: fixed; pointer-events: none; z-index: 1000005; display: none; border: 3px dashed #10b981; background: rgba(16, 185, 129, 0.22); border-radius: 6px; will-change: left, top, width, height; }
+        #toast-container { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 1000010; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: min(92vw, 480px); }
+        .gold-toast { pointer-events: auto; background: rgba(30, 27, 23, 0.96); backdrop-filter: blur(10px); border: 1.5px solid var(--gold-primary); color: var(--text-main); padding: 12px 18px; border-radius: 16px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45); display: flex; align-items: center; gap: 12px; font-size: 0.85rem; font-weight: 800; animation: toastSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        body.light-mode .gold-toast { background: rgba(255, 255, 255, 0.96); }
+        .gold-toast.toast-green { border-color: var(--accent-green); }
+        .gold-toast.toast-red { border-color: var(--danger-red); }
+        .gold-toast.toast-hide { animation: toastSlideOut 0.25s ease forwards; }
+        @keyframes toastSlideIn { from { opacity: 0; transform: translateY(-22px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes toastSlideOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-18px) scale(0.95); } }
+        header { position: sticky; top: 0; z-index: 45; background: var(--bg-secondary); border-bottom: 1.5px solid var(--border-color); padding: 14px 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease; will-change: transform; }
+        header.header-hidden { transform: translateY(-110%); opacity: 0; pointer-events: none; }
+        .header-inner { max-width: 1400px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+        .brand-box { display: flex; align-items: center; gap: 12px; }
+        .brand-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .brand-title h1 { font-size: clamp(1.15rem, 3vw, 1.65rem); font-weight: 900; color: var(--text-main); }
+        .gold-badge { background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%); color: #181512; font-weight: 900; font-size: 0.72rem; padding: 2px 10px; border-radius: 999px; }
+        .brand-sub { font-size: 0.78rem; color: var(--text-muted); font-weight: 700; }
+        .app-card { background-color: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: 22px; box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.3); position: relative; }
+        .gold-btn { background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%); color: #181512; font-weight: 900; border: none; cursor: pointer; transition: transform 0.15s ease, opacity 0.15s ease; }
+        .gold-btn:hover:not(:disabled), .gold-btn:active:not(:disabled) { background: linear-gradient(135deg, #f0d7a8 0%, #c9a05c 100%); transform: translateY(-1px); }
+        .pill-btn { background-color: var(--bg-secondary); border: 1.5px solid var(--border-color); color: var(--text-main); font-weight: 700; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease; }
+        .pill-btn:hover:not(:disabled), .pill-btn.active { background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%); color: #181512; border-color: transparent; font-weight: 800; }
+        .kbd-tag { font-size: 0.65rem; padding: 1px 5px; border-radius: 4px; background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.15); margin-right: 4px; font-family: monospace; }
+        .kw-highlight { background: rgba(207, 169, 107, 0.2); color: var(--gold-bright); padding: 1px 8px; border-radius: 6px; font-weight: 800; border: 1px solid rgba(207, 169, 107, 0.42); display: inline-block; }
+        .container { max-width: 1400px; width: 95%; margin: 22px auto; position: relative; z-index: 10; flex-grow: 1; }
+        .scroll-reveal { opacity: 0; will-change: transform, opacity; transition: opacity 0.48s cubic-bezier(0.22, 1, 0.36, 1), transform 0.48s cubic-bezier(0.22, 1, 0.36, 1); }
+        .scroll-reveal.reveal-from-bottom { transform: translateY(32px) scale(0.985); }
+        .scroll-reveal.reveal-from-top { transform: translateY(-32px) scale(0.985); }
+        .scroll-reveal.in-view { opacity: 1; transform: translateY(0) scale(1); }
+        .pipeline-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        @media (max-width: 850px) { .pipeline-steps { grid-template-columns: repeat(2, 1fr); } }
+        .step-card { background: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: 16px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; transition: all 0.25s ease; }
+        .step-card.active { border-color: var(--gold-bright); background: rgba(207, 169, 107, 0.15); }
+        .step-card.done { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.1); }
+        .step-num { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-secondary); color: var(--gold-bright); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.85rem; flex-shrink: 0; border: 1px solid var(--border-color); }
+        .step-card.active .step-num { background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%); color: #181512; }
+        .step-card.done .step-num { background: var(--accent-green); color: #06281e; border-color: var(--accent-green); }
+        .step-info h4 { font-size: 0.84rem; font-weight: 800; color: var(--text-main); }
+        .step-info span { font-size: 0.7rem; color: var(--text-muted); display: block; }
+        .top-grid { display: grid; grid-template-columns: 1fr 1.45fr; gap: 18px; margin-bottom: 20px; }
+        @media (max-width: 960px) { .top-grid { grid-template-columns: 1fr; } }
+        .panel { padding: 20px; }
+        .panel-title { font-size: 1rem; font-weight: 900; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--gold-bright); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .upload-zone { border: 2px dashed var(--gold-primary); border-radius: 18px; padding: 32px 16px; text-align: center; cursor: pointer; background: var(--bg-secondary); min-height: 250px; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: all 0.2s ease; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold-bright); background: rgba(207, 169, 107, 0.12); transform: scale(1.005); }
+        .upload-icon { font-size: 2.6rem; margin-bottom: 8px; }
+        .upload-zone h3 { font-size: 1rem; font-weight: 800; margin-bottom: 6px; color: var(--text-main); }
+        .upload-zone p { font-size: 0.8rem; color: var(--text-muted); }
+        #fileInput { display: none; }
+        .best-preset-banner { background: linear-gradient(135deg, rgba(207, 169, 107, 0.22) 0%, rgba(184, 143, 77, 0.10) 100%); border: 2px solid var(--gold-primary); border-radius: 14px; padding: 10px 15px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; }
+        .best-preset-label { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 900; color: var(--gold-bright); cursor: pointer; }
+        .best-preset-label input { width: 19px; height: 19px; accent-color: #cfa96b; cursor: pointer; }
+        .layout-Quick-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; margin-bottom: 10px; }
+        .layout-Quick-row .control-group { flex: 1; min-width: 240px; }
+        .accordion-toggle-btn { width: 100%; background: var(--bg-secondary); border: 1.5px solid var(--border-color); color: var(--gold-bright); padding: 9px 14px; border-radius: 12px; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin-top: 8px; transition: background 0.2s ease; }
+        .accordion-toggle-btn:hover { background: rgba(207, 169, 107, 0.14); }
+        .advanced-accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, margin-top 0.25s ease; opacity: 0; }
+        .advanced-accordion-body.open { max-height: 520px; opacity: 1; margin-top: 10px; }
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 600px) { .controls-grid { grid-template-columns: 1fr; } }
+        .control-group { background: var(--bg-secondary); padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .control-group label { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 5px; color: var(--text-main); }
+        .control-group input[type="range"] { width: 100%; accent-color: var(--gold-primary); cursor: pointer; }
+        .control-group select { width: 100%; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; outline: none; cursor: pointer; }
+        .upscale-banner { background: rgba(56, 189, 248, 0.1); border: 1.5px solid rgba(56, 189, 248, 0.45); border-radius: 12px; padding: 9px 14px; margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+        .upscale-label { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 800; color: #7dd3fc; cursor: pointer; }
+        body.light-mode .upscale-label { color: #0369a1; }
+        .upscale-label input { width: 18px; height: 18px; accent-color: #0284c7; cursor: pointer; }
+        .options-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 14px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-color); }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--text-main); }
+        .checkbox-group input { width: 17px; height: 17px; accent-color: var(--gold-primary); cursor: pointer; }
+        .paper-saver-bar { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 11px 14px; background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 12px; }
+        .paper-saver-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+        .paper-saver-info { font-size: 0.82rem; font-weight: 800; color: #6ee7b7; }
+        body.light-mode .paper-saver-info { color: #065f46; }
+        .ink-gauge-wrap { display: flex; align-items: center; gap: 10px; font-size: 0.76rem; font-weight: 800; color: var(--gold-bright); }
+        .ink-gauge-track { flex: 1; height: 7px; background: rgba(0, 0, 0, 0.3); border-radius: 99px; overflow: hidden; border: 1px solid rgba(16, 185, 129, 0.35); }
+        .ink-gauge-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #34d399, #cfa96b); transition: width 0.35s ease; }
+        .paper-saver-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+        .actions-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+        .btn { padding: 12px 18px; border-radius: 14px; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-refresh { flex: 1; min-width: 130px; }
+        .btn-download { flex: 1.8; min-width: 220px; font-size: 0.95rem; box-shadow: 0 6px 20px rgba(207, 169, 107, 0.28); }
+        .progress-wrapper { display: none; padding: 14px 18px; margin-bottom: 18px; }
+        .progress-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 800; margin-bottom: 8px; color: var(--gold-bright); }
+        .progress-track { width: 100%; height: 10px; background: var(--bg-secondary); border-radius: 999px; overflow: hidden; border: 1px solid var(--border-color); }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #cfa96b, #10b981); transition: width 0.2s; }
+        .unified-sticky-dock { position: sticky; top: var(--sticky-top-offset, 68px); z-index: 95; width: fit-content; max-width: 96%; margin: 0 auto 16px auto; padding: 6px 12px; background: rgba(30, 27, 23, 0.94); backdrop-filter: blur(12px); border: 1.5px solid var(--border-color); border-radius: 14px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45); transition: top 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+        body.light-mode .unified-sticky-dock { background: rgba(255, 255, 255, 0.95); }
+        .dock-tools-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; font-size: 0.72rem; }
+        .legend-items { display: flex; gap: 8px; align-items: center; }
+        .legend-tag { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+        .dot-img { width: 10px; height: 10px; background: rgba(16, 185, 129, 0.3); border: 2px solid #10b981; display: inline-block; border-radius: 3px; }
+        .dot-erase { width: 10px; height: 10px; background: rgba(244, 63, 94, 0.3); border: 2px solid #f43f5e; display: inline-block; border-radius: 3px; }
+        .mouse-mode-switch { display: flex; flex-wrap: wrap; gap: 4px; background: var(--bg-secondary); padding: 3px; border-radius: 9px; border: 1px solid var(--border-color); }
+        .mode-btn { padding: 4px 8px; border-radius: 7px; border: 1px solid transparent; font-size: 0.71rem; font-weight: 800; cursor: pointer; background: transparent; color: var(--text-muted); }
+        .mode-btn.active-protect { background: rgba(16, 185, 129, 0.22); color: #34d399; border-color: #10b981; }
+        .mode-btn.active-erase { background: rgba(244, 63, 94, 0.22); color: #fb7185; border-color: #f43f5e; }
+        .mode-btn.active-scroll { background: rgba(207, 169, 107, 0.24); color: var(--gold-bright); border-color: var(--gold-primary); }
+        .mode-btn.active-stylus { background: rgba(56, 189, 248, 0.22); color: #7dd3fc; border-color: #38bdf8; }
+        .pages-list { display: flex; flex-direction: column; gap: 22px; }
+        .page-item { overflow: hidden; content-visibility: auto; contain-intrinsic-size: 460px; }
+        .page-item.excluded-page { opacity: 0.45; border-color: rgba(244, 63, 94, 0.45); }
+        .page-header { background: var(--bg-secondary); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px; }
+        .page-title { font-weight: 900; color: var(--gold-bright); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .include-page-label { display: inline-flex; align-items: center; gap: 7px; background: var(--bg-card); border: 1.5px solid var(--border-color); padding: 4px 12px; border-radius: 10px; cursor: pointer; font-size: 0.82rem; font-weight: 800; color: var(--text-main); user-select: none; }
+        .include-page-label input { width: 17px; height: 17px; accent-color: var(--accent-green); cursor: pointer; }
+        .stats-pill { font-size: 0.74rem; background: var(--bg-card); border: 1px solid var(--border-color); padding: 3px 10px; border-radius: 99px; color: var(--text-muted); font-weight: 700; }
+        .page-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-sm { padding: 5px 10px; font-size: 0.74rem; border-radius: 9px; }
+        .btn-zoom-highlight { background: rgba(56, 189, 248, 0.16); border: 1.5px solid rgba(56, 189, 248, 0.55); color: #7dd3fc; font-weight: 800; cursor: pointer; }
+        body.light-mode .btn-zoom-highlight { color: #0369a1; }
+        .btn-zoom-highlight:hover { background: #0284c7; color: #ffffff; }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 18px; cursor: crosshair; user-select: none; -webkit-user-select: none; position: relative; }
+        @media (max-width: 920px) { .comparison-grid { grid-template-columns: 1fr; } }
+        .comparison-grid.slider-compare-mode { display: block; position: relative; max-width: 820px; margin: 0 auto; }
+        .comparison-grid.slider-compare-mode .out-canvas-box { position: absolute; top: 18px; left: 18px; right: 18px; bottom: 18px; pointer-events: none; z-index: 4; clip-path: inset(0 0 0 var(--ba-pos, 50%)); }
+        .ba-slider-bar { display: none; position: absolute; top: 52px; bottom: 18px; left: calc(18px + (100% - 36px) * var(--ba-ratio, 0.5)); width: 4px; background: linear-gradient(180deg, #ebd2a4, #10b981); z-index: 8; cursor: ew-resize; touch-action: none; box-shadow: 0 0 12px rgba(0, 0, 0, 0.65); }
+        .comparison-grid.slider-compare-mode .ba-slider-bar { display: block; }
+        .ba-slider-knob { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%); color: #181512; font-weight: 900; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5); border: 2px solid #fff; }
+        .canvas-box { background: var(--bg-secondary); border: 1.5px solid var(--border-color); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+        .canvas-label { padding: 8px 12px; font-size: 0.75rem; font-weight: 800; background: rgba(0, 0, 0, 0.3); color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+        .canvas-label.white-label { background: rgba(16, 185, 129, 0.16); color: #6ee7b7; border-bottom: 1px solid rgba(16, 185, 129, 0.3); }
+        body.light-mode .canvas-label.white-label { color: #065f46; }
+        .canvas-wrapper { position: relative; width: 100%; line-height: 0; cursor: crosshair; background: #ffffff; user-select: none; -webkit-user-select: none; }
+        .canvas-wrapper.drawing-active { touch-action: none; }
+        .canvas-wrapper.scroll-active { touch-action: pan-y pinch-zoom; cursor: grab; }
+        .canvas-wrapper canvas { width: 100%; height: auto; display: block; pointer-events: none; }
+        .overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(10, 9, 8, 0.86); backdrop-filter: blur(8px); z-index: 99990; display: none; align-items: center; justify-content: center; padding: 14px; }
+        .modal-backdrop.open { display: flex; }
+        .a4-modal-card { background: var(--bg-card); border: 2px solid var(--gold-primary); border-radius: 22px; max-width: 780px; width: 100%; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 22px 50px rgba(0, 0, 0, 0.65); }
+        .zoom-editor-card { background: var(--bg-card); border: 2px solid var(--gold-primary); border-radius: 20px; width: 97vw; height: 94vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75); }
+        .zoom-toolbar { padding: 10px 16px; background: var(--bg-secondary); border-bottom: 1.5px solid var(--border-color); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+        .zoom-controls-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+        .zoom-viewport { flex: 1; overflow: auto; background: #0d0c0a; display: flex; padding: 20px; position: relative; direction: ltr; -webkit-overflow-scrolling: touch; touch-action: none; }
+        .zoom-stage-inner { position: relative; margin: auto; background: #ffffff; box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6); border-radius: 8px; overflow: hidden; line-height: 0; flex-shrink: 0; will-change: width, height; }
+        .a4-modal-header { padding: 14px 18px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .a4-modal-body { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.25); }
+        .a4-modal-body canvas { max-width: 100%; max-height: 64vh; width: auto; height: auto; background: #ffffff; border-radius: 8px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); }
+        .a4-modal-footer { padding: 12px 18px; background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+        .floating-scroll-btns { position: fixed; bottom: 22px; left: 20px; z-index: 80; display: flex; flex-direction: column; gap: 8px; }
+        .float-nav-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--bg-card); border: 1.5px solid var(--gold-primary); color: var(--gold-bright); font-size: 1rem; cursor: pointer; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease, background 0.2s ease; }
+        .float-nav-btn:hover { transform: translateY(-2px); background: var(--gold-primary); color: #181512; }
+        footer { border-top: 1.5px solid var(--border-color); background: var(--bg-secondary); margin-top: 40px; position: relative; z-index: 10; }
+        .footer-marquee-wrap { width: 100%; overflow: hidden; background: linear-gradient(90deg, rgba(20, 18, 16, 0.96) 0%, rgba(44, 38, 30, 0.88) 50%, rgba(20, 18, 16, 0.96) 100%); border-bottom: 1px solid var(--border-color); padding: 9px 0; direction: ltr; }
+        body.light-mode .footer-marquee-wrap { background: linear-gradient(90deg, #ebe5d8 0%, #dfd5c3 50%, #ebe5d8 100%); }
+        .footer-marquee-track { display: flex; width: max-content; animation: scrollRightToLeft 34s linear infinite; }
+        @keyframes scrollRightToLeft { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }
+        .footer-bottom { max-width: 1400px; width: 95%; margin: 0 auto; padding: 16px 0; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; font-size: 0.85rem; font-weight: 800; }
+        @media (max-width: 600px) { .footer-bottom { flex-direction: column; text-align: center; } }
+        .skeleton-card { background: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: 22px; padding: 18px; overflow: hidden; position: relative; }
+        .skeleton-shimmer-box { height: 260px; border-radius: 14px; background: linear-gradient(90deg, rgba(30,27,23,0.9) 25%, rgba(207,169,107,0.18) 50%, rgba(30,27,23,0.9) 75%); background-size: 200% 100%; animation: goldShimmer 1.4s infinite linear; }
+        @keyframes goldShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .demo-slide-btn { margin-top: 10px; width: 100%; padding: 9px 14px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; background: rgba(207, 169, 107, 0.12); border: 1.5px dashed var(--gold-primary); color: var(--gold-bright); cursor: pointer; transition: all 0.2s ease; }
+        .demo-slide-btn:hover { background: rgba(207, 169, 107, 0.24); transform: translateY(-1px); }
+        .success-summary-card { background: var(--bg-card); border: 2px solid var(--gold-primary); border-radius: 24px; max-width: 480px; width: 100%; padding: 24px; text-align: center; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75); animation: toastSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+        .success-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+        .success-stat-box { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px 8px; }
+        .success-stat-box strong { display: block; font-size: 1.2rem; font-weight: 900; color: var(--gold-bright); }
+        .success-stat-box span { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; }
     </style>
 </head>
 <body>
 
-    <!-- حاوية الإشعارات الذهبية العائمة -->
     <div id="toast-container"></div>
-
-    <!-- مربع التحديد العالمي العائم -->
     <div id="global-selection-marquee"></div>
-	<!-- بطاقة ملخص الإنجاز الفخمة بعد التحميل (Success Summary Card) -->
+
+    <!-- بطاقة ملخص الإنجاز الفخمة بعد التحميل -->
     <div class="modal-backdrop" id="successSummaryModal" onclick="if(event.target===this) closeSuccessSummaryModal()">
         <div class="success-summary-card">
             <div style="font-size:2.6rem;margin-bottom:6px;">🎉</div>
@@ -1455,7 +232,7 @@
         </div>
     </div>
 
-    <!-- نافذة التكبير الكامل (Fullscreen Zoom Modal) للتحديد الدقيق بالماوس أو الإصبع -->
+    <!-- نافذة التكبير الكامل (Fullscreen Zoom Modal) -->
     <div class="modal-backdrop" id="zoomEditorModal" onclick="if(event.target===this) closeZoomEditorModal()">
         <div class="zoom-editor-card">
             <div class="zoom-toolbar">
@@ -1463,7 +240,7 @@
                     <span style="font-weight:900;color:var(--gold-bright);font-size:0.9rem;" id="zoomModalTitle">
                         🔍 تكبير الشريحة للتحديد الدقيق
                     </span>
-					<button type="button" class="pill-btn btn-sm" id="zoomPrevSlideBtn" onclick="navigateZoomSlide(-1)">➡️ السابقة</button>
+                    <button type="button" class="pill-btn btn-sm" id="zoomPrevSlideBtn" onclick="navigateZoomSlide(-1)">➡️ السابقة</button>
                     <button type="button" class="pill-btn btn-sm" id="zoomNextSlideBtn" onclick="navigateZoomSlide(1)">التالية ⬅️</button>
                     <div class="mouse-mode-switch">
                         <button type="button" class="mode-btn active-protect" id="zoomModeProtectBtn" onclick="setTouchMouseMode('protect')">
@@ -1551,7 +328,7 @@
         </svg>
     </div>
 
-    <!-- الشريط العلوي (يختفي تلقائياً عند التمرير لأسفل) -->
+    <!-- الشريط العلوي -->
     <header id="mainAppHeader">
         <div class="header-inner">
             <div class="brand-box">
@@ -1560,7 +337,7 @@
                         <h1>محول الملخصات الذكي للطباعة</h1>
                         <span class="gold-badge">MED26</span>
                     </div>
-                    <p class="brand-sub">تحويل الملخصات السوداء إلى صفحات بيضاء جاهزة للطباعة • تكبير Fullscreen للتحديد الدقيق • Cornell Notes & A4 Upscale</p>
+                    <p class="brand-sub">تحويل الملخصات السوداء إلى صفحات بيضاء جاهزة للطباعة • دمج الشرائح في A4 مع Upscale • يعمل على الجوال والآيباد</p>
                 </div>
             </div>
 
@@ -1597,8 +374,8 @@
             <div class="step-card" id="step3">
                 <div class="step-num">3</div>
                 <div class="step-info">
-                    <h4>عزل الصور ومسح الشعار</h4>
-                    <span>Image Lock & Logo Wipe</span>
+                    <h4>عزل الصور وتفتيح المربعات</h4>
+                    <span>Image Lock & Smart Box Lighten</span>
                 </div>
             </div>
             <div class="step-card" id="step4">
@@ -1621,13 +398,13 @@
                 <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
                     <div class="upload-icon">📥</div>
                     <h3 id="fileNameDisplay">اضغط هنا لاختيار ملف الـ PDF أو اسحبه إلى هنا</h3>
-                    <p>يحافظ على الصور الطبية بألوانها الأصلية ويمسح الخلفية السوداء والتموجات</p>
-                   <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple>
+                    <p>يحافظ على الصور الطبية بألوانها الأصلية ويفتح المربعات الغامقة خلف النصوص تلقائياً</p>
+                    <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple>
                 </div>
                 <button type="button" class="demo-slide-btn" onclick="loadInteractiveDemoSlide()">
                     🧪 ليس لديك ملف حالياً؟ جرّب الأداة فوراً على شريحة طبية جاهزة
                 </button>
-                </div>
+            </div>
 
             <!-- 2. الإعدادات الذكية -->
             <div class="app-card panel">
@@ -1671,7 +448,8 @@
                     </label>
                     <span class="gold-badge" style="background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;">300 DPI Crisp</span>
                 </div>
-				<!-- خيار مستوى ضغط وحجم ملف الـ PDF (300 DPI للطباعة أو خفيف للتلجرام) -->
+
+                <!-- خيار مستوى ضغط وحجم ملف الـ PDF -->
                 <div class="control-group" style="margin-top:8px;">
                     <label>
                         <span>📦 مستوى جودة وحجم ملف الـ PDF النهائي</span>
@@ -1682,7 +460,7 @@
                     </select>
                 </div>
 
-                <!-- زر طي وفتح الإعدادات الدقيقة المتقدمة (Clean UI Accordion) -->
+                <!-- زر طي وفتح الإعدادات الدقيقة المتقدمة -->
                 <button type="button" class="accordion-toggle-btn" onclick="toggleAdvancedAccordion()">
                     <span>🎛️ ضبط دقيق متقدم للإعدادات (حساسية الخلفية • الصور • الشعار • الألوان)</span>
                     <span id="accordionArrow">▾</span>
@@ -1740,7 +518,7 @@
                     </div>
                 </div>
 
-                <!-- شريط استبعاد الغلاف والفواصل + عداد توفير الحبر الأسود (Ink Saver Gauge) -->
+                <!-- شريط استبعاد الغلاف والفواصل + عداد توفير الحبر الأسود -->
                 <div class="paper-saver-bar">
                     <div class="paper-saver-top">
                         <div class="paper-saver-info" id="includedPagesSummary">
@@ -1806,7 +584,7 @@
                     <button type="button" class="mode-btn" id="globalCompareSliderBtn" onclick="toggleGlobalSliderCompareMode()">
                         🌗 مقارنة بالسحب
                     </button>
-					<button type="button" class="mode-btn" id="stylusSmartModeBtn" onclick="toggleStylusSmartMode()" title="القلم يرسم والإصبع يمرر تلقائياً">
+                    <button type="button" class="mode-btn" id="stylusSmartModeBtn" onclick="toggleStylusSmartMode()" title="القلم يرسم والإصبع يمرر تلقائياً">
                         ✒️ وضع القلم الذكي
                     </button>
                 </div>
@@ -1858,12 +636,10 @@
     let isGlobalSliderCompare = false;
     let currentA4PreviewSheetIndex = 0;
 
-    // متغيرات نافذة التكبير Fullscreen للتحديد الدقيق
     let activeZoomPageNum = null;
     let currentZoomFactor = 1.0;
     let zoomModalShowOriginal = false;
 
-    // إعادة استخدام Canvas مشترك أثناء التصدير بدقة Ultra-HD لمنع امتلاء رام الجوال والآيباد
     const sharedExportOrigCanvas = document.createElement('canvas');
     const sharedExportOutCanvas = document.createElement('canvas');
 
@@ -1881,7 +657,6 @@
     const globalMarquee = document.getElementById('global-selection-marquee');
     const mainAppHeader = document.getElementById('mainAppHeader');
 
-    // إشعارات عائمة فخمة (Gold Toast Notifications)
     let audioCtx = null;
     function playSubtleClickSound() {
         try {
@@ -1918,7 +693,6 @@
         }, 3100);
     }
 
-    // طي وفتح الإعدادات الدقيقة (Clean UI Accordion)
     function toggleAdvancedAccordion() {
         const body = document.getElementById('advancedAccordionBody');
         const arrow = document.getElementById('accordionArrow');
@@ -1926,7 +700,6 @@
         arrow.textContent = isOpen ? '▴' : '▾';
     }
 
-    // إخفاء الهيدر العلوي عند النزول وبقاؤه مخفياً حتى الرجوع لأعلى الصفحة + أنميشن التمرير
     let lastScrollY = window.scrollY;
     let scrollDirection = 'down';
     window.addEventListener('scroll', () => {
@@ -1964,7 +737,12 @@
         }
     }, { threshold: 0.06, rootMargin: '60px 0px' });
 
-    // Web Worker مدمج مع جدول الحساب المسبق (Lookup Table) وحساب نسبة توفير الحبر الأسود
+    // =========================================================================
+    // الخوارزمية الجديدة داخل الـ Web Worker:
+    // - تحمي المربعات الكريمية الصغيرة وشارة PATHOLOGY الذهبية (التي بداخلها نص أسود)
+    // - تحمي الصور الطبية ذات الخلفية الزرقاء والهستولوجي الوردي
+    // - تفتح المربعات البنية الغامقة ومربعات الأسهم الملونة (الفوشي والبنفسجي والأزرق) إلى Pastel فاتح جداً وتحول النص الأبيض بداخلها إلى أسود حاد وواضح 100%!
+    // =========================================================================
     const workerCode = `
         function rgbToHsl(r, g, b) {
             r /= 255; g /= 255; b /= 255;
@@ -2045,7 +823,13 @@
             const ds = Math.max(2, Math.round(width / 320));
             const gw = Math.ceil(width / ds);
             const gh = Math.ceil(height / ds);
+
             const brightGrid = new Uint8Array(gw * gh);
+            const photoCandidateGrid = new Uint8Array(gw * gh);
+            const cellLumGrid = new Uint8Array(gw * gh);
+            const cellSatGrid = new Uint8Array(gw * gh);
+            const hasWhitePixelInCell = new Uint8Array(gw * gh);
+            const hasBlackPixelInCell = new Uint8Array(gw * gh);
 
             const scaledManualHistory = manualHistory.map(m => ({
                 type: m.type,
@@ -2070,6 +854,7 @@
                 }
             }
 
+            // مسح الشبكة لتحديد إضاءة وتشبع كل خلية بدقة
             for (let gy = 0; gy < gh; gy++) {
                 const py = Math.min(height - 1, gy * ds);
                 for (let gx = 0; gx < gw; gx++) {
@@ -2078,20 +863,38 @@
 
                     const px = Math.min(width - 1, gx * ds);
                     const idx = (py * width + px) * 4;
-                    const lum = 0.299 * src[idx] + 0.587 * src[idx + 1] + 0.114 * src[idx + 2];
+                    const r = src[idx], g = src[idx + 1], b = src[idx + 2];
+                    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+                    const delta = max - min;
+                    const sat = max === 0 ? 0 : delta / max;
+                    const lum = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
 
-                    if (lum >= cardThresh) {
+                    cellLumGrid[gIdx] = lum;
+                    cellSatGrid[gIdx] = Math.round(sat * 255);
+
+                    if (lum >= 180 && sat < 0.28) hasWhitePixelInCell[gIdx] = 1;
+                    if (lum <= 48) hasBlackPixelInCell[gIdx] = 1;
+
+                    // التقاط البطاقات البيضاء أو المربعات الكريمية الفاتحة (مثل Diagnosis و Normal myocardium)
+                    if (lum >= Math.min(162, cardThresh)) {
                         brightGrid[gIdx] = 1;
+                    }
+
+                    // التقاط مرشحات الصور الطبية الملونة (مثل الخلفية الزرقاء لعينات الباثولوجي أو الهستولوجي الوردي)
+                    const isBrownBar = (lum >= 65 && lum <= 135 && sat < 0.42 && r > g && g >= b);
+                    if (!isBrownBar && (lum >= 155 || (sat >= 0.26 && lum >= 42 && delta >= 26))) {
+                        photoCandidateGrid[gIdx] = 1;
                     }
                 }
             }
 
-            const visited = new Uint8Array(gw * gh);
             const protectedGrid = new Uint8Array(gw * gh);
             const borderGrid = new Uint8Array(gw * gh);
             const detectedBoxes = [];
 
-            const minBlobArea = Math.floor((gw * gh) * 0.0032);
+            // 1. اكتشاف البطاقات البيضاء والمربعات الكريمية (الكبيرة والصغيرة)
+            const visited = new Uint8Array(gw * gh);
+            const minLargeBlob = Math.floor((gw * gh) * 0.0028);
 
             for (let startY = 0; startY < gh; startY++) {
                 for (let startX = 0; startX < gw; startX++) {
@@ -2100,7 +903,6 @@
                         const queue = [startIdx];
                         visited[startIdx] = 1;
                         const component = [startIdx];
-
                         let minX = startX, maxX = startX, minY = startY, maxY = startY;
 
                         let head = 0;
@@ -2108,7 +910,6 @@
                             const curr = queue[head++];
                             const cy = Math.floor(curr / gw);
                             const cx = curr % gw;
-
                             if (cx < minX) minX = cx;
                             if (cx > maxX) maxX = cx;
                             if (cy < minY) minY = cy;
@@ -2120,7 +921,6 @@
                                 cx > 0 ? curr - 1 : -1,
                                 cx < gw - 1 ? curr + 1 : -1
                             ];
-
                             for (const n of neighbors) {
                                 if (n !== -1 && brightGrid[n] === 1 && !visited[n]) {
                                     visited[n] = 1;
@@ -2132,11 +932,28 @@
 
                         const boxW = maxX - minX + 1;
                         const boxH = maxY - minY + 1;
-                        const fillRatio = component.length / (boxW * boxH);
+                        const rectArea = boxW * boxH;
+                        const fillRatio = component.length / rectArea;
 
-                        if (component.length >= minBlobArea && boxW > 5 && boxH > 4) {
-                            if (fillRatio > 0.35) {
-                                const radius = Math.min(4, Math.floor(Math.min(boxW, boxH) * 0.08));
+                        // فحص هل هذا المربع الكريمي يحتوي على نص أسود بداخله (مثل Normal myocardium أو Diagnosis:)
+                        let blackInsideCount = 0;
+                        for (let gy = minY; gy <= maxY; gy++) {
+                            for (let gx = minX; gx <= maxX; gx++) {
+                                if (hasBlackPixelInCell[gy * gw + gx]) blackInsideCount++;
+                            }
+                        }
+
+                        const isSmallCreamLabelWithBlackText =
+                            component.length >= 12 &&
+                            boxW >= 6 &&
+                            boxH >= 2 &&
+                            (boxW / boxH) >= 1.5 &&
+                            fillRatio >= 0.36 &&
+                            blackInsideCount >= 2;
+
+                        if ((component.length >= minLargeBlob && boxW > 5 && boxH > 4) || isSmallCreamLabelWithBlackText) {
+                            if (fillRatio > 0.35 || isSmallCreamLabelWithBlackText) {
+                                const radius = isSmallCreamLabelWithBlackText ? 1 : Math.min(4, Math.floor(Math.min(boxW, boxH) * 0.08));
                                 for (let gy = minY; gy <= maxY; gy++) {
                                     for (let gx = minX; gx <= maxX; gx++) {
                                         let dx = 0, dy = 0;
@@ -2157,13 +974,11 @@
                                 const subW = boxW + 2;
                                 const subH = boxH + 2;
                                 const subMask = new Uint8Array(subW * subH);
-
                                 for (const cIdx of component) {
                                     const cy = Math.floor(cIdx / gw) - minY + 1;
                                     const cx = (cIdx % gw) - minX + 1;
                                     subMask[cy * subW + cx] = 1;
                                 }
-
                                 const extQueue = [0];
                                 subMask[0] = 2;
                                 let eHead = 0;
@@ -2171,7 +986,6 @@
                                     const curr = extQueue[eHead++];
                                     const cy = Math.floor(curr / subW);
                                     const cx = curr % subW;
-
                                     const nbs = [
                                         cy > 0 ? curr - subW : -1,
                                         cy < subH - 1 ? curr + subW : -1,
@@ -2185,7 +999,6 @@
                                         }
                                     }
                                 }
-
                                 for (let sy = 1; sy < subH - 1; sy++) {
                                     for (let sx = 1; sx < subW - 1; sx++) {
                                         if (subMask[sy * subW + sx] !== 2) {
@@ -2216,6 +1029,114 @@
                 }
             }
 
+            // 2. اكتشاف الصور الطبية الكبيرة ذات الخلفية الزرقاء أو الوردية (مع فصل خطوط الأسهم الرقيقة عنها)
+            const erodedPhotoGrid = new Uint8Array(gw * gh);
+            for (let gy = 1; gy < gh - 1; gy++) {
+                for (let gx = 1; gx < gw - 1; gx++) {
+                    const gIdx = gy * gw + gx;
+                    if (
+                        photoCandidateGrid[gIdx] === 1 &&
+                        photoCandidateGrid[gIdx - 1] === 1 &&
+                        photoCandidateGrid[gIdx + 1] === 1 &&
+                        photoCandidateGrid[gIdx - gw] === 1 &&
+                        photoCandidateGrid[gIdx + gw] === 1
+                    ) {
+                        erodedPhotoGrid[gIdx] = 1;
+                    }
+                }
+            }
+
+            const visitedPhoto = new Uint8Array(gw * gh);
+            for (let startY = 0; startY < gh; startY++) {
+                for (let startX = 0; startX < gw; startX++) {
+                    const startIdx = startY * gw + startX;
+                    if (erodedPhotoGrid[startIdx] === 1 && !visitedPhoto[startIdx]) {
+                        const queue = [startIdx];
+                        visitedPhoto[startIdx] = 1;
+                        const component = [startIdx];
+                        let minX = startX, maxX = startX, minY = startY, maxY = startY;
+
+                        let head = 0;
+                        while (head < queue.length) {
+                            const curr = queue[head++];
+                            const cy = Math.floor(curr / gw);
+                            const cx = curr % gw;
+                            if (cx < minX) minX = cx;
+                            if (cx > maxX) maxX = cx;
+                            if (cy < minY) minY = cy;
+                            if (cy > maxY) maxY = cy;
+
+                            const neighbors = [
+                                cy > 0 ? curr - gw : -1,
+                                cy < gh - 1 ? curr + gw : -1,
+                                cx > 0 ? curr - 1 : -1,
+                                cx < gw - 1 ? curr + 1 : -1
+                            ];
+                            for (const n of neighbors) {
+                                if (n !== -1 && erodedPhotoGrid[n] === 1 && !visitedPhoto[n]) {
+                                    visitedPhoto[n] = 1;
+                                    queue.push(n);
+                                    component.push(n);
+                                }
+                            }
+                        }
+
+                        const boxW = maxX - minX + 1;
+                        const boxH = maxY - minY + 1;
+                        const fillRatio = component.length / (boxW * boxH);
+
+                        // الصورة الطبية تكون كبيرة في الطول والعرض (بينما أشرطة النصوص ومربعات الأسهم ارتفاعها صغير)
+                        if (boxW >= gw * 0.13 && boxH >= gh * 0.17 && fillRatio >= 0.36) {
+                            const pad = 1;
+                            const x0 = Math.max(0, minX - pad), x1 = Math.min(gw - 1, maxX + pad);
+                            const y0 = Math.max(0, minY - pad), y1 = Math.min(gh - 1, maxY + pad);
+                            for (let gy = y0; gy <= y1; gy++) {
+                                for (let gx = x0; gx <= x1; gx++) {
+                                    protectedGrid[gy * gw + gx] = 1;
+                                    if (gx === x0 || gx === x1 || gy === y0 || gy === y1) {
+                                        borderGrid[gy * gw + gx] = 1;
+                                    }
+                                }
+                            }
+                            detectedBoxes.push({
+                                x: x0 * ds,
+                                y: y0 * ds,
+                                w: (x1 - x0 + 1) * ds,
+                                h: (y1 - y0 + 1) * ds
+                            });
+                        }
+                    }
+                }
+            }
+
+            // 3. حماية الشارة الذهبية العلوية اليسرى (مثل PATHOLOGY أو LAST UPDATE التي بداخلها نص أسود)
+            const topBadgeLimitX = Math.floor(gw * 0.22);
+            const topBadgeLimitY = Math.floor(gh * 0.17);
+            for (let gy = 0; gy < topBadgeLimitY; gy++) {
+                for (let gx = 0; gx < topBadgeLimitX; gx++) {
+                    const gIdx = gy * gw + gx;
+                    if (eraseGrid[gIdx] === 0 && cellLumGrid[gIdx] >= 95) {
+                        protectedGrid[gIdx] = 1;
+                    }
+                }
+            }
+            // ملء النصوص السوداء داخل الشارة العلوية اليسرى لتظل محمية بالكامل
+            for (let gy = 1; gy < topBadgeLimitY - 1; gy++) {
+                let firstProt = -1, lastProt = -1;
+                for (let gx = 0; gx < topBadgeLimitX; gx++) {
+                    if (protectedGrid[gy * gw + gx] === 1) {
+                        if (firstProt === -1) firstProt = gx;
+                        lastProt = gx;
+                    }
+                }
+                if (firstProt !== -1 && lastProt - firstProt >= 4) {
+                    for (let gx = firstProt; gx <= lastProt; gx++) {
+                        protectedGrid[gy * gw + gx] = 1;
+                    }
+                }
+            }
+
+            // 4. تطبيق التحديد اليدوي للمستخدم
             for (const item of scaledManualHistory) {
                 const gx0 = Math.max(0, Math.floor(item.x / ds));
                 const gy0 = Math.max(0, Math.floor(item.y / ds));
@@ -2230,6 +1151,35 @@
                             eraseGrid[gy * gw + gx] = 1;
                             protectedGrid[gy * gw + gx] = 0;
                         }
+                    }
+                }
+            }
+
+            // 5. اكتشاف مربعات النصوص الملونة والغامقة التي تحتوي على نص أبيض بداخلها (Callout Boxes & Brown Answer Bars)
+            // لتفتيح خلفيتها إلى Pastel فاتح جداً وتحويل النص الأبيض بداخلها إلى أسود حاد وواضح!
+            const darkCalloutBoxGrid = new Uint8Array(gw * gh);
+            for (let gy = 1; gy < gh - 1; gy++) {
+                for (let gx = 1; gx < gw - 1; gx++) {
+                    const gIdx = gy * gw + gx;
+                    if (protectedGrid[gIdx] === 1 || eraseGrid[gIdx] === 1) continue;
+
+                    let nonBlackCount = 0;
+                    let whiteTextCount = 0;
+                    const y0 = Math.max(0, gy - 2), y1 = Math.min(gh - 1, gy + 2);
+                    const x0 = Math.max(0, gx - 4), x1 = Math.min(gw - 1, gx + 4);
+                    const totalWin = (y1 - y0 + 1) * (x1 - x0 + 1);
+
+                    for (let wy = y0; wy <= y1; wy++) {
+                        for (let wx = x0; wx <= x1; wx++) {
+                            const wIdx = wy * gw + wx;
+                            if (cellLumGrid[wIdx] >= 48) nonBlackCount++;
+                            if (hasWhitePixelInCell[wIdx] === 1) whiteTextCount++;
+                        }
+                    }
+
+                    // إذا كانت المنطقة عبارة عن شريط/صندوق ممتلئ وبداخله نص أبيض:
+                    if (nonBlackCount >= totalWin * 0.55 && whiteTextCount >= 1) {
+                        darkCalloutBoxGrid[gIdx] = 1;
                     }
                 }
             }
@@ -2292,24 +1242,81 @@
                     const delta = max - min;
                     const sat = max === 0 ? 0 : delta / max;
 
-                    if (lum < bgThresh && sat < 0.32 && delta < 40) {
+                    // أ) معالجة المربعات البنية الغامقة ومربعات الأسهم الملونة (الفوشي والبنفسجي والأزرق) التي بداخلها نص أبيض:
+                    const isWarmBrownBox = (lum >= 62 && lum <= 136 && sat < 0.44 && r >= g && g >= b && delta < 52);
+
+                    if (isWarmBrownBox) {
+                        // تفتيح الشريط البني الغامق إلى لون كريمي فاتح جداً وأنيق (#F6F2EB) ليظهر النص الأسود بداخله بوضوح تام!
+                        dst[pIdx] = 246;
+                        dst[pIdx + 1] = 242;
+                        dst[pIdx + 2] = 235;
+                        dst[pIdx + 3] = 255;
+                        if (lum < 120) whitenedDarkPixels++;
+                        continue;
+                    }
+
+                    if (darkCalloutBoxGrid[gIdx] === 1) {
+                        // داخل صندوق ملون يحتوي على نص أبيض (مثل الصناديق الفوشية والبنفسجية والزرقاء):
+                        // 1. إذا كان البكسل هو النص الأبيض (أو حوافه الفاتحة) -> يتحول إلى أسود حاد وواضح!
+                        if (lum >= 148 || (sat < 0.28 && lum >= 122)) {
+                            const normTxt = Math.min(1, Math.max(0, (lum - 118) / (230 - 118)));
+                            let ink = Math.round(255 * (1 - Math.pow(normTxt, 0.55)));
+                            if (ink < 110) ink = 0;
+                            dst[pIdx] = ink;
+                            dst[pIdx + 1] = ink;
+                            dst[pIdx + 2] = ink;
+                            dst[pIdx + 3] = 255;
+                        }
+                        // 2. إذا كان البكسل هو خلفية الصندوق الملون -> يتفتح إلى درجة باستيل ناعمة وفاتحة جداً (Lightness 91%)!
+                        else if (sat >= 0.22 && lum >= 40) {
+                            const hsl = rgbToHsl(r, g, b);
+                            hsl[2] = 0.91;
+                            hsl[1] = Math.min(0.55, hsl[1] * 0.75);
+                            const [nr, ng, nb] = hslToRgb(hsl[0], hsl[1], hsl[2]);
+                            dst[pIdx] = nr;
+                            dst[pIdx + 1] = ng;
+                            dst[pIdx + 2] = nb;
+                            dst[pIdx + 3] = 255;
+                            if (lum < 120) whitenedDarkPixels++;
+                        } else {
+                            dst[pIdx] = 248;
+                            dst[pIdx + 1] = 246;
+                            dst[pIdx + 2] = 242;
+                            dst[pIdx + 3] = 255;
+                            if (lum < 120) whitenedDarkPixels++;
+                        }
+                        continue;
+                    }
+
+                    // ب) الخلفية السوداء والخطوط المموجة الرمادية:
+                    if (lum < bgThresh && sat < 0.36 && delta < 44) {
                         dst[pIdx] = 255;
                         dst[pIdx + 1] = 255;
                         dst[pIdx + 2] = 255;
                         dst[pIdx + 3] = 255;
                         if (lum < 120) whitenedDarkPixels++;
-                    } else if (sat >= 0.24 && delta >= 28 && lum > 35) {
+                    }
+                    // ج) النصوص الملونة والأسهم الرقيقة المكتوبة مباشرة على الخلفية السوداء:
+                    else if (sat >= 0.25 && delta >= 28 && lum > 42) {
                         const hsl = rgbToHsl(r, g, b);
                         const boostFactor = isUpscaleActive ? Math.min(0.75, colorBoost + 0.12) : colorBoost;
-                        hsl[2] = Math.max(0.15, Math.min(0.42, hsl[2] * (1 - boostFactor)));
+                        hsl[2] = Math.max(0.16, Math.min(0.42, hsl[2] * (1 - boostFactor)));
                         hsl[1] = Math.min(1.0, hsl[1] * 1.2);
                         const [nr, ng, nb] = hslToRgb(hsl[0], hsl[1], hsl[2]);
                         dst[pIdx] = nr;
                         dst[pIdx + 1] = ng;
                         dst[pIdx + 2] = nb;
                         dst[pIdx + 3] = 255;
-                    } else {
-                        const ink = inkLUT[Math.min(255, Math.max(0, Math.round(lum)))];
+                    }
+                    // د) النصوص البيضاء والأسهم البيضاء:
+                    else {
+                        let ink = inkLUT[Math.min(255, Math.max(0, Math.round(lum)))];
+                        // ضمان سواد حاد للنصوص البيضاء المكتوبة فوق الأشرطة البنية (التي إضاءتها فوق 136)
+                        if (lum >= 136 && sat < 0.35) {
+                            const brownTxtNorm = Math.min(1, (lum - 130) / 95);
+                            ink = Math.min(ink, Math.round(255 * (1 - Math.pow(brownTxtNorm, 0.55))));
+                            if (isUpscaleActive && ink < 105) ink = 0;
+                        }
                         dst[pIdx] = ink;
                         dst[pIdx + 1] = ink;
                         dst[pIdx + 2] = ink;
@@ -2359,7 +1366,6 @@
         reconstructionWorker = null;
     }
 
-    // مراقب الظهور لمعالجة الصفحات الظاهرة عند التمرير
     const pageVisibilityObserver = new IntersectionObserver((entries) => {
         for (const entry of entries) {
             const pageNum = parseInt(entry.target.dataset.pageNum, 10);
@@ -2469,7 +1475,6 @@
         });
     }
 
-    // اختصارات الكيبورد السريعة للكمبيوتر والآيباد (Ctrl+Z, P, E, Space, Esc)
     window.addEventListener('keydown', (e) => {
         if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
@@ -2508,7 +1513,6 @@
         }
     });
 
-    // وضع المقارنة بالسحب (Before/After Slider)
     function toggleGlobalSliderCompareMode() {
         isGlobalSliderCompare = !isGlobalSliderCompare;
         const btn = document.getElementById('globalCompareSliderBtn');
@@ -2544,7 +1548,6 @@
         document.getElementById('progressStatus').textContent = text;
     }
 
-    // استقبال ملف واحد أو عدة ملفات PDF ودمجها معاً
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropZone.classList.remove('dragover');
@@ -2580,7 +1583,6 @@
         container.innerHTML = '';
         pagesData = [];
 
-        // إظهار قالب التحميل الذهبي (Skeleton Shimmer)
         const shimmerEl = document.createElement('div');
         shimmerEl.className = 'skeleton-card';
         shimmerEl.innerHTML = `<div class="skeleton-shimmer-box"></div>`;
@@ -2690,7 +1692,6 @@
         await runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
     }
 
-    // توليد شريحة طبية تجريبية جاهزة بضغطة زر (Interactive Demo Slide)
     async function loadInteractiveDemoSlide() {
         pageVisibilityObserver.disconnect();
         document.getElementById('pagesContainer').innerHTML = '';
@@ -2753,7 +1754,6 @@
         ctx.fillStyle = '#141210';
         ctx.fillRect(0, 0, w, h);
 
-        // بطاقة صورة هستولوجي تجريبية على اليسار
         ctx.fillStyle = '#f8fafc';
         ctx.fillRect(60, 70, 310, 340);
         ctx.fillStyle = '#f43f5e';
@@ -2770,7 +1770,6 @@
         ctx.font = 'bold 18px Cairo, sans-serif';
         ctx.fillText('Histology Specimen (H&E)', 105, 385);
 
-        // نصوص طبية بيضاء وملونة على الخلفية السوداء
         ctx.fillStyle = '#ebd2a4';
         ctx.font = 'bold 30px Cairo, sans-serif';
         ctx.fillText('OSPE Station: Cardiac Muscle', 430, 85);
@@ -2783,7 +1782,6 @@
         ctx.fillStyle = '#34d399';
         ctx.fillText('• Function: Synchronized myocardial contraction', 430, 275);
 
-        // شعار زاوية تجريبي لمسحه تلقائياً
         ctx.fillStyle = '#cfa96b';
         ctx.fillRect(20, h - 65, 130, 45);
         ctx.fillStyle = '#141210';
@@ -2791,7 +1789,6 @@
         ctx.fillText('MED26 LOGO', 35, h - 37);
     }
 
-    // التنقل بين الشرائح داخل نافذة الـ Fullscreen
     function navigateZoomSlide(delta) {
         if (!activeZoomPageNum || !pagesData.length) return;
         const currentIndex = pagesData.findIndex(p => p.pageNum === activeZoomPageNum);
@@ -2803,7 +1800,6 @@
         }
     }
 
-    // تحديث عداد توفير الورق ونسبة توفير الحبر الأسود (Ink Saver Gauge)
     function updateIncludedPagesSummary() {
         const total = pagesData.length;
         const includedPages = pagesData.filter(p => p.includedInPrint);
@@ -2864,7 +1860,6 @@
         showToast('☑️ تم تحديد جميع الصفحات لتضمينها في الطباعة.', 'gold');
     }
 
-    // تعميم التحديد اليدوي على جميع صفحات الملخص بضغطة واحدة
     function applyManualBoxToAllPages(sourcePageNum) {
         const srcPage = pagesData.find(p => p.pageNum === sourcePageNum);
         if (!srcPage || srcPage.manualHistory.length === 0) {
@@ -2886,7 +1881,6 @@
         showToast(`📌 تم تعميم المربع (${lastBox.type === 'protect' ? 'حماية صورة' : 'مسح'}) على جميع الـ ${pagesData.length} صفحات!`, 'green');
     }
 
-    // نافذة التكبير الكامل (Fullscreen Zoom Modal) للتحديد الدقيق والسلس على الجوال والآيباد
     function openZoomEditorModal(pageNum) {
         const pageObj = pagesData.find(p => p.pageNum === pageNum);
         if (!pageObj) return;
@@ -3173,7 +2167,6 @@
             ctx.strokeRect(box.x, box.y, box.w, box.h);
         }
 
-        // رسم المربعات اليدوية مع أيقونة (×) للحذف الذكي عند الضغط عليها
         for (const m of pageObj.manualHistory) {
             const bx = m.rx * pageObj.width;
             const by = m.ry * pageObj.height;
@@ -3187,7 +2180,6 @@
             ctx.fillRect(bx, by, bw, bh);
             ctx.strokeRect(bx, by, bw, bh);
 
-            // شارة الحذف السريع × في الزاوية
             const badgeSize = 18;
             ctx.fillStyle = isProt ? '#059669' : '#e11d48';
             ctx.fillRect(bx + bw - badgeSize, by, badgeSize, badgeSize);
@@ -3198,7 +2190,8 @@
             ctx.fillText('×', bx + bw - badgeSize / 2, by + badgeSize / 2);
         }
     }
-let isStylusSmartMode = false;
+
+    let isStylusSmartMode = false;
     let lastDetectedPointerType = 'mouse';
 
     window.addEventListener('pointerdown', (e) => {
@@ -3225,6 +2218,7 @@ let isStylusSmartMode = false;
             'gold'
         );
     }
+
     let activeDragState = null;
     let activeSliderDrag = null;
     let zoomPinchState = null;
@@ -3254,11 +2248,10 @@ let isStylusSmartMode = false;
 
     function handleGlobalStart(e) {
         const zoomViewport = document.getElementById('zoomViewport');
-const isPenInput =
+        const isPenInput =
             lastDetectedPointerType === 'pen' ||
             (e.touches && e.touches[0] && e.touches[0].touchType === 'stylus');
 
-        // في وضع القلم الذكي: إذا لمس الطالب الشاشة بإصبعه (وليس القلم) يتم تمرير الصفحة تلقائياً
         if (isStylusSmartMode && e.touches && e.touches.length === 1 && !isPenInput) {
             if (activeZoomPageNum && e.target.closest('#zoomViewport')) {
                 if (e.cancelable) e.preventDefault();
@@ -3272,7 +2265,7 @@ const isPenInput =
             }
             return;
         }
-        // 1. لمس الشاشة بأصبعين داخل نافذة الزوم -> تقريب وإبعاد وتحريك فوري (Pinch-to-Zoom & 2-Finger Pan)
+
         if (activeZoomPageNum && e.touches && e.touches.length >= 2 && e.target.closest('#zoomEditorModal')) {
             if (e.cancelable) e.preventDefault();
             activeDragState = null;
@@ -3290,7 +2283,6 @@ const isPenInput =
             return;
         }
 
-        // 2. إذا كان في وضع "تحريك الشريحة (Pan)" داخل نافذة الزوم بإصبع واحد أو بالماوس
         if (activeZoomPageNum && currentMouseMode === 'scroll' && e.target.closest('#zoomViewport')) {
             if (e.cancelable) e.preventDefault();
             const pt = getClientXY(e);
@@ -3314,7 +2306,6 @@ const isPenInput =
         if (e.type === 'mousedown' && e.button !== 0) return;
         if (e.target.closest('button, input, select, label, .page-header, .a4-modal-card, .unified-sticky-dock, .zoom-toolbar')) return;
 
-        // 3. الرسم الدقيق بإصبع واحد أو بالماوس داخل نافذة الزوم Fullscreen
         const zoomWrapper = e.target.closest('#zoomCanvasWrapper');
         if (zoomWrapper && activeZoomPageNum) {
             const pageObj = pagesData.find(p => p.pageNum === activeZoomPageNum);
@@ -3399,7 +2390,6 @@ const isPenInput =
     function handleGlobalMove(e) {
         const zoomViewport = document.getElementById('zoomViewport');
 
-        // معالجة التقريب والتحريك بأصبعين في نافذة Fullscreen
         if (zoomPinchState && e.touches && e.touches.length >= 2) {
             if (e.cancelable) e.preventDefault();
             const vpRect = zoomViewport.getBoundingClientRect();
@@ -3415,7 +2405,6 @@ const isPenInput =
             return;
         }
 
-        // معالجة تحريك الشريحة في وضع Pan داخل نافذة Fullscreen
         if (zoomPanState) {
             if (e.cancelable) e.preventDefault();
             const pt = getClientXY(e);
@@ -3502,7 +2491,6 @@ const isPenInput =
             pageObj.needsReprocess = false;
             runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
         } else {
-            // الحذف الذكي: عند الضغط ضغطة خفيفة فوق أي مربع يدوي سابق يتم حذفه وحده فوراً
             const clickRx = clampedX0 / rect.width;
             const clickRy = clampedY0 / rect.height;
             for (let i = pageObj.manualHistory.length - 1; i >= 0; i--) {
@@ -3696,7 +2684,6 @@ const isPenInput =
         return { card, includeCheckbox, origWrapper, outWrapper, origCanvas, overlayCanvas, outCanvas, statsEl };
     }
 
-    // نافذة المعاينة الحية لورقة الـ A4 المجمعة (Live A4 Sheet Preview + Cornell Notes)
     async function openA4PreviewModal() {
         const includedPages = pagesData.filter(p => p.includedInPrint);
         if (!includedPages.length) {
@@ -3931,7 +2918,6 @@ const isPenInput =
         sharedExportOutCanvas.height = 1;
     }
 
-    // تصدير ملف الـ PDF النهائي مع إظهار بطاقة ملخص الإنجاز
     async function exportPrintablePDF() {
         const includedPages = pagesData.filter(p => p.includedInPrint);
         if (!includedPages.length) {
