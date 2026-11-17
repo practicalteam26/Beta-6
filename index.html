@@ -150,7 +150,7 @@
             to { opacity: 0; transform: translateY(-18px) scale(0.95); }
         }
 
-        /* الهيدر العلوي (يختفي تلقائياً عند النزول لأسفل) */
+        /* الهيدر العلوي (يختفي تلقائياً عند النزول لأسفل ولا يعود إلا في أعلى الصفحة) */
         header {
             position: sticky;
             top: 0;
@@ -771,8 +771,7 @@
             transition: width 0.2s;
         }
 
-        /* القائمة الموحدة الثابتة (تجمع شريط الأدوات + شريط المصغرات السريع في بطاقة واحدة يستحيل تداخلها) */
-       /* القائمة المصغرة والثابتة أعلى الشاشة مع النزول */
+        /* القائمة المصغرة والثابتة أعلى الشاشة مع النزول */
         .unified-sticky-dock {
             position: sticky;
             top: var(--sticky-top-offset, 68px);
@@ -870,65 +869,6 @@
             background: rgba(207, 169, 107, 0.24);
             color: var(--gold-bright);
             border-color: var(--gold-primary);
-        }
-
-        /* الجزء السفلي من البطاقة الموحدة: شريط المصغرات السريع المكبّر */
-        .dock-filmstrip-row {
-            display: none;
-            align-items: center;
-            gap: 12px;
-            padding-top: 10px;
-            border-top: 1.5px solid var(--border-color);
-            overflow-x: auto;
-            scrollbar-width: thin;
-        }
-
-        .filmstrip-label {
-            font-size: 0.9rem;
-            font-weight: 900;
-            color: var(--gold-bright);
-            white-space: nowrap;
-            margin-left: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .filmstrip-pill {
-            min-width: 48px;
-            height: 42px;
-            padding: 0 14px;
-            border-radius: 12px;
-            background: var(--bg-secondary);
-            border: 2px solid rgba(16, 185, 129, 0.5);
-            color: var(--text-main);
-            font-size: 0.95rem;
-            font-weight: 900;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.18s ease;
-        }
-
-        .filmstrip-pill:hover {
-            transform: translateY(-2px) scale(1.04);
-            border-color: var(--gold-bright);
-        }
-
-        .filmstrip-pill.active-page {
-            background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%);
-            color: #181512;
-            border-color: transparent;
-            box-shadow: 0 4px 14px rgba(207, 169, 107, 0.48);
-            transform: scale(1.05);
-        }
-
-        .filmstrip-pill.excluded {
-            opacity: 0.42;
-            border-color: var(--danger-red);
-            text-decoration: line-through;
         }
 
         /* قائمة الصفحات المعالجة */
@@ -1235,21 +1175,23 @@
             overflow: auto;
             background: #0d0c0a;
             display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 24px;
+            padding: 20px;
             position: relative;
+            direction: ltr;
+            -webkit-overflow-scrolling: touch;
+            touch-action: none;
         }
 
         .zoom-stage-inner {
             position: relative;
+            margin: auto;
             background: #ffffff;
             box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
             border-radius: 8px;
             overflow: hidden;
             line-height: 0;
-            transform-origin: top center;
             flex-shrink: 0;
+            will-change: width, height;
         }
 
         .a4-modal-header {
@@ -1394,18 +1336,18 @@
         <div class="zoom-editor-card">
             <div class="zoom-toolbar">
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                    <span style="font-weight:900;color:var(--gold-bright);font-size:0.95rem;" id="zoomModalTitle">
+                    <span style="font-weight:900;color:var(--gold-bright);font-size:0.9rem;" id="zoomModalTitle">
                         🔍 تكبير الشريحة للتحديد الدقيق
                     </span>
                     <div class="mouse-mode-switch">
                         <button type="button" class="mode-btn active-protect" id="zoomModeProtectBtn" onclick="setTouchMouseMode('protect')">
-                            ➕ رسم مربع حماية صورة
+                            ➕ حماية صورة
                         </button>
                         <button type="button" class="mode-btn" id="zoomModeEraseBtn" onclick="setTouchMouseMode('erase')">
-                            🧹 ممسحة لتبييض جزء
+                            🧹 ممسحة
                         </button>
                         <button type="button" class="mode-btn" id="zoomModeScrollBtn" onclick="setTouchMouseMode('scroll')">
-                            🖐️ تحريك الشريحة (Pan)
+                            🖐️ تحريك (أو بإصبعين)
                         </button>
                     </div>
                 </div>
@@ -1418,7 +1360,7 @@
                     <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(1)">100%</button>
                     <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(1.5)">150%</button>
                     <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(2)">200%</button>
-                    <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(2.75)">275%</button>
+                    <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(3)">300%</button>
                     <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(currentZoomFactor + 0.25)">➕</button>
                     <button type="button" class="pill-btn btn-sm" onclick="undoFromZoomModal()">↩️ تراجع</button>
                     <button type="button" class="gold-btn btn-sm" style="padding:6px 14px;" onclick="closeZoomEditorModal()">
@@ -1704,6 +1646,7 @@
             </div>
         </div>
 
+        <!-- شريط الأدوات المصغر والثابت أثناء النزول -->
         <div class="app-card unified-sticky-dock" id="unifiedStickyDock">
             <div class="dock-tools-row">
                 <div class="legend-items">
@@ -1727,6 +1670,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- قائمة الصفحات المعالجة -->
         <div class="pages-list" id="pagesContainer"></div>
 
     </main>
@@ -1773,7 +1718,7 @@
 
     // متغيرات نافذة التكبير Fullscreen للتحديد الدقيق
     let activeZoomPageNum = null;
-    let currentZoomFactor = 1.5;
+    let currentZoomFactor = 1.0;
     let zoomModalShowOriginal = false;
 
     // إعادة استخدام Canvas مشترك أثناء التصدير بدقة Ultra-HD لمنع امتلاء رام الجوال والآيباد
@@ -1839,7 +1784,7 @@
         arrow.textContent = isOpen ? '▴' : '▾';
     }
 
-    // إخفاء الهيدر العلوي تلقائياً عند النزول لأسفل وإظهاره عند الصعود + أنميشن التمرير
+    // إخفاء الهيدر العلوي عند النزول وبقاؤه مخفياً حتى الرجوع لأعلى الصفحة + أنميشن التمرير
     let lastScrollY = window.scrollY;
     let scrollDirection = 'down';
     window.addEventListener('scroll', () => {
@@ -1848,14 +1793,15 @@
 
         if (Math.abs(delta) > 6) {
             scrollDirection = delta > 0 ? 'down' : 'up';
-            if (currY > 90 && scrollDirection === 'down') {
-                mainAppHeader.classList.add('header-hidden');
-                document.body.classList.add('header-is-hidden');
-            } else if (scrollDirection === 'up' || currY <= 40) {
-                mainAppHeader.classList.remove('header-hidden');
-                document.body.classList.remove('header-is-hidden');
-            }
             lastScrollY = currY;
+        }
+
+        if (currY > 60) {
+            mainAppHeader.classList.add('header-hidden');
+            document.body.classList.add('header-is-hidden');
+        } else {
+            mainAppHeader.classList.remove('header-hidden');
+            document.body.classList.remove('header-is-hidden');
         }
     }, { passive: true });
 
@@ -2271,7 +2217,7 @@
         reconstructionWorker = null;
     }
 
-    // مراقب الظهور لمعالجة الصفحات الظاهرة وتحديث شريط المصغرات (Filmstrip Minimap)
+    // مراقب الظهور لمعالجة الصفحات الظاهرة عند التمرير
     const pageVisibilityObserver = new IntersectionObserver((entries) => {
         for (const entry of entries) {
             const pageNum = parseInt(entry.target.dataset.pageNum, 10);
@@ -2279,12 +2225,9 @@
             if (!pageObj) continue;
 
             pageObj.isVisible = entry.isIntersecting;
-            if (entry.isIntersecting) {
-                highlightActiveFilmstripPill(pageNum);
-                if (pageObj.needsReprocess) {
-                    pageObj.needsReprocess = false;
-                    runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
-                }
+            if (entry.isIntersecting && pageObj.needsReprocess) {
+                pageObj.needsReprocess = false;
+                runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
             }
         }
     }, { rootMargin: '250px 0px', threshold: 0.15 });
@@ -2496,8 +2439,6 @@
         const totalPages = currentPdf.numPages;
         const previewScale = 1.15;
 
-
-
         for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
             updateProgress(
                 ((pageNum - 1) / totalPages) * 100,
@@ -2526,8 +2467,6 @@
         const pageUI = createPageCardUI(pageNum, width, height);
         document.getElementById('pagesContainer').appendChild(pageUI.card);
         revealObserver.observe(pageUI.card);
-
-        createFilmstripPill(pageNum);
 
         const origCtx = pageUI.origCanvas.getContext('2d', { willReadFrequently: true });
         await page.render({ canvasContext: origCtx, viewport: viewport }).promise;
@@ -2565,11 +2504,6 @@
         await runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
     }
 
-    // شريط المصغرات السريع المدمج (Filmstrip Minimap)
-    function createFilmstripPill() {}
-    function highlightActiveFilmstripPill() {}
-    function syncFilmstripInclusionState() {}
-
     // تحديث عداد توفير الورق ونسبة توفير الحبر الأسود (Ink Saver Gauge)
     function updateIncludedPagesSummary() {
         const total = pagesData.length;
@@ -2590,7 +2524,6 @@
 
         document.getElementById('inkSavedText').textContent = `💧 توفير الحبر الأسود: ${avgInkSaved}%`;
         document.getElementById('inkGaugeFill').style.width = `${avgInkSaved}%`;
-        syncFilmstripInclusionState();
     }
 
     async function autoExcludeCoversAndDividers() {
@@ -2654,20 +2587,22 @@
         showToast(`📌 تم تعميم المربع (${lastBox.type === 'protect' ? 'حماية صورة' : 'مسح'}) على جميع الـ ${pagesData.length} صفحات!`, 'green');
     }
 
-    // نافذة التكبير الكامل (Fullscreen Zoom Modal) للتحديد الدقيق
+    // نافذة التكبير الكامل (Fullscreen Zoom Modal) للتحديد الدقيق والسلس على الجوال والآيباد
     function openZoomEditorModal(pageNum) {
         const pageObj = pagesData.find(p => p.pageNum === pageNum);
         if (!pageObj) return;
 
         activeZoomPageNum = pageNum;
-        currentZoomFactor = 1.5;
+        currentZoomFactor = 1.0;
         zoomModalShowOriginal = false;
         document.getElementById('zoomToggleSourceBtn').textContent = '👁️ عرض: البيضاء الجاهزة للطباعة';
-        document.getElementById('zoomModalTitle').textContent = `🔍 تكبير صفحة (${pageNum}) للتحديد الدقيق (${Math.round(currentZoomFactor * 100)}%)`;
+        document.getElementById('zoomModalTitle').textContent = `🔍 تكبير صفحة (${pageNum}) للتحديد الدقيق (100%)`;
 
         document.getElementById('zoomEditorModal').classList.add('open');
         refreshZoomEditorCanvases();
-        applyZoomDimensions();
+        requestAnimationFrame(() => {
+            applyZoomDimensions();
+        });
     }
 
     function closeZoomEditorModal() {
@@ -2683,21 +2618,42 @@
         refreshZoomEditorCanvases();
     }
 
-    function setZoomFactor(newFactor) {
-        currentZoomFactor = Math.max(0.75, Math.min(3.5, newFactor));
+    function setZoomFactor(newFactor, centerPoint = null) {
+        const viewport = document.getElementById('zoomViewport');
+        const oldFactor = currentZoomFactor;
+        currentZoomFactor = Math.max(0.8, Math.min(4.5, newFactor));
+
         if (activeZoomPageNum) {
             document.getElementById('zoomModalTitle').textContent =
                 `🔍 تكبير صفحة (${activeZoomPageNum}) للتحديد الدقيق (${Math.round(currentZoomFactor * 100)}%)`;
         }
+
+        const prevScrollLeft = viewport.scrollLeft;
+        const prevScrollTop = viewport.scrollTop;
+        const focalX = centerPoint ? centerPoint.x : viewport.clientWidth / 2;
+        const focalY = centerPoint ? centerPoint.y : viewport.clientHeight / 2;
+
         applyZoomDimensions();
+
+        const scaleRatio = currentZoomFactor / oldFactor;
+        viewport.scrollLeft = (prevScrollLeft + focalX) * scaleRatio - focalX;
+        viewport.scrollTop = (prevScrollTop + focalY) * scaleRatio - focalY;
     }
 
     function applyZoomDimensions() {
         const pageObj = pagesData.find(p => p.pageNum === activeZoomPageNum);
         if (!pageObj) return;
+        const viewport = document.getElementById('zoomViewport');
         const wrapper = document.getElementById('zoomCanvasWrapper');
-        const baseW = Math.min(window.innerWidth * 0.88, 1000);
+        const availW = Math.max(280, (viewport.clientWidth || window.innerWidth) - 32);
+        const availH = Math.max(280, (viewport.clientHeight || window.innerHeight) - 32);
         const ratio = pageObj.height / pageObj.width;
+
+        let baseW = availW;
+        if (baseW * ratio > availH) {
+            baseW = availH / ratio;
+        }
+
         const targetW = Math.round(baseW * currentZoomFactor);
         const targetH = Math.round(targetW * ratio);
         wrapper.style.width = `${targetW}px`;
@@ -2931,6 +2887,8 @@
 
     let activeDragState = null;
     let activeSliderDrag = null;
+    let zoomPinchState = null;
+    let zoomPanState = null;
 
     function getClientXY(e) {
         if (e.touches && e.touches.length > 0) {
@@ -2942,7 +2900,52 @@
         return { x: e.clientX, y: e.clientY };
     }
 
+    function getTouchDistanceAndCenter(t1, t2, viewportRect) {
+        const dx = t2.clientX - t1.clientX;
+        const dy = t2.clientY - t1.clientY;
+        return {
+            dist: Math.hypot(dx, dy),
+            cx: (t1.clientX + t2.clientX) / 2 - viewportRect.left,
+            cy: (t1.clientY + t2.clientY) / 2 - viewportRect.top,
+            rawCX: (t1.clientX + t2.clientX) / 2,
+            rawCY: (t1.clientY + t2.clientY) / 2
+        };
+    }
+
     function handleGlobalStart(e) {
+        const zoomViewport = document.getElementById('zoomViewport');
+
+        // 1. لمس الشاشة بأصبعين داخل نافذة الزوم -> تقريب وإبعاد وتحريك فوري (Pinch-to-Zoom & 2-Finger Pan)
+        if (activeZoomPageNum && e.touches && e.touches.length >= 2 && e.target.closest('#zoomEditorModal')) {
+            if (e.cancelable) e.preventDefault();
+            activeDragState = null;
+            zoomPanState = null;
+            globalMarquee.style.display = 'none';
+
+            const vpRect = zoomViewport.getBoundingClientRect();
+            const info = getTouchDistanceAndCenter(e.touches[0], e.touches[1], vpRect);
+            zoomPinchState = {
+                startDist: Math.max(20, info.dist),
+                startZoom: currentZoomFactor,
+                lastRawCX: info.rawCX,
+                lastRawCY: info.rawCY
+            };
+            return;
+        }
+
+        // 2. إذا كان في وضع "تحريك الشريحة (Pan)" داخل نافذة الزوم بإصبع واحد أو بالماوس
+        if (activeZoomPageNum && currentMouseMode === 'scroll' && e.target.closest('#zoomViewport')) {
+            if (e.cancelable) e.preventDefault();
+            const pt = getClientXY(e);
+            zoomPanState = {
+                startX: pt.x,
+                startY: pt.y,
+                scrollLeft: zoomViewport.scrollLeft,
+                scrollTop: zoomViewport.scrollTop
+            };
+            return;
+        }
+
         const sliderBar = e.target.closest('.ba-slider-bar');
         if (sliderBar) {
             if (e.cancelable) e.preventDefault();
@@ -2954,7 +2957,7 @@
         if (e.type === 'mousedown' && e.button !== 0) return;
         if (e.target.closest('button, input, select, label, .page-header, .a4-modal-card, .unified-sticky-dock, .zoom-toolbar')) return;
 
-        // دعم الرسم الدقيق داخل نافذة الزوم Fullscreen
+        // 3. الرسم الدقيق بإصبع واحد أو بالماوس داخل نافذة الزوم Fullscreen
         const zoomWrapper = e.target.closest('#zoomCanvasWrapper');
         if (zoomWrapper && activeZoomPageNum) {
             const pageObj = pagesData.find(p => p.pageNum === activeZoomPageNum);
@@ -3037,6 +3040,33 @@
     }
 
     function handleGlobalMove(e) {
+        const zoomViewport = document.getElementById('zoomViewport');
+
+        // معالجة التقريب والتحريك بأصبعين في نافذة Fullscreen
+        if (zoomPinchState && e.touches && e.touches.length >= 2) {
+            if (e.cancelable) e.preventDefault();
+            const vpRect = zoomViewport.getBoundingClientRect();
+            const info = getTouchDistanceAndCenter(e.touches[0], e.touches[1], vpRect);
+
+            const scale = info.dist / zoomPinchState.startDist;
+            setZoomFactor(zoomPinchState.startZoom * scale, { x: info.cx, y: info.cy });
+
+            zoomViewport.scrollLeft -= (info.rawCX - zoomPinchState.lastRawCX);
+            zoomViewport.scrollTop -= (info.rawCY - zoomPinchState.lastRawCY);
+            zoomPinchState.lastRawCX = info.rawCX;
+            zoomPinchState.lastRawCY = info.rawCY;
+            return;
+        }
+
+        // معالجة تحريك الشريحة في وضع Pan داخل نافذة Fullscreen
+        if (zoomPanState) {
+            if (e.cancelable) e.preventDefault();
+            const pt = getClientXY(e);
+            zoomViewport.scrollLeft = zoomPanState.scrollLeft - (pt.x - zoomPanState.startX);
+            zoomViewport.scrollTop = zoomPanState.scrollTop - (pt.y - zoomPanState.startY);
+            return;
+        }
+
         if (activeSliderDrag) {
             if (e.cancelable) e.preventDefault();
             const pt = getClientXY(e);
@@ -3065,7 +3095,19 @@
         globalMarquee.style.height = `${height}px`;
     }
 
-    function handleGlobalEnd() {
+    function handleGlobalEnd(e) {
+        if (zoomPinchState) {
+            if (!e.touches || e.touches.length < 2) {
+                zoomPinchState = null;
+            }
+            return;
+        }
+
+        if (zoomPanState) {
+            zoomPanState = null;
+            return;
+        }
+
         if (activeSliderDrag) {
             activeSliderDrag = null;
             return;
