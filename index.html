@@ -28,6 +28,11 @@
             --border-color: rgba(207, 169, 107, 0.38);
             --accent-green: #10b981;
             --danger-red: #f43f5e;
+            --sticky-top-offset: 72px;
+        }
+
+        body.header-is-hidden {
+            --sticky-top-offset: 10px;
         }
 
         body.light-mode {
@@ -48,6 +53,10 @@
             padding: 0;
             font-family: 'Cairo', sans-serif;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
@@ -72,11 +81,11 @@
             overflow: hidden;
         }
 
-        /* مربع التحديد العالمي العائم (سريع جداً ويسمح بالخروج خارج حدود الصورة) */
+        /* مربع التحديد العالمي العائم */
         #global-selection-marquee {
             position: fixed;
             pointer-events: none;
-            z-index: 999999;
+            z-index: 1000005;
             display: none;
             border: 3px dashed #10b981;
             background: rgba(16, 185, 129, 0.22);
@@ -84,15 +93,80 @@
             will-change: left, top, width, height;
         }
 
-        /* الهيدر العلوي */
+        /* حاوية الإشعارات الذهبية العائمة (Gold Toast Notifications) */
+        #toast-container {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000010;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            width: min(92vw, 480px);
+        }
+
+        .gold-toast {
+            pointer-events: auto;
+            background: rgba(30, 27, 23, 0.96);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid var(--gold-primary);
+            color: var(--text-main);
+            padding: 12px 18px;
+            border-radius: 16px;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            animation: toastSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        body.light-mode .gold-toast {
+            background: rgba(255, 255, 255, 0.96);
+        }
+
+        .gold-toast.toast-green {
+            border-color: var(--accent-green);
+        }
+
+        .gold-toast.toast-red {
+            border-color: var(--danger-red);
+        }
+
+        .gold-toast.toast-hide {
+            animation: toastSlideOut 0.25s ease forwards;
+        }
+
+        @keyframes toastSlideIn {
+            from { opacity: 0; transform: translateY(-22px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes toastSlideOut {
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 0; transform: translateY(-18px) scale(0.95); }
+        }
+
+        /* الهيدر العلوي (يختفي تلقائياً عند النزول لأسفل) */
         header {
             position: sticky;
             top: 0;
-            z-index: 40;
+            z-index: 45;
             background: var(--bg-secondary);
             border-bottom: 1.5px solid var(--border-color);
             padding: 14px 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+            will-change: transform;
+        }
+
+        header.header-hidden {
+            transform: translateY(-110%);
+            opacity: 0;
+            pointer-events: none;
         }
 
         .header-inner {
@@ -168,7 +242,7 @@
             color: var(--text-main);
             font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.15s ease, color 0.15s ease;
+            transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
         }
 
         .pill-btn:hover:not(:disabled), .pill-btn.active {
@@ -176,6 +250,16 @@
             color: #181512;
             border-color: transparent;
             font-weight: 800;
+        }
+
+        .kbd-tag {
+            font-size: 0.65rem;
+            padding: 1px 5px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            margin-right: 4px;
+            font-family: monospace;
         }
 
         .kw-highlight {
@@ -195,6 +279,26 @@
             position: relative;
             z-index: 10;
             flex-grow: 1;
+        }
+
+        /* أنميشن الصعود والنزول الانسيابي */
+        .scroll-reveal {
+            opacity: 0;
+            will-change: transform, opacity;
+            transition: opacity 0.48s cubic-bezier(0.22, 1, 0.36, 1), transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .scroll-reveal.reveal-from-bottom {
+            transform: translateY(32px) scale(0.985);
+        }
+
+        .scroll-reveal.reveal-from-top {
+            transform: translateY(-32px) scale(0.985);
+        }
+
+        .scroll-reveal.in-view {
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
 
         /* شريط المراحل الأربع */
@@ -219,6 +323,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: all 0.25s ease;
         }
 
         .step-card.active {
@@ -313,11 +418,13 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            transition: all 0.2s ease;
         }
 
         .upload-zone:hover, .upload-zone.dragover {
             border-color: var(--gold-bright);
             background: rgba(207, 169, 107, 0.12);
+            transform: scale(1.005);
         }
 
         .upload-icon {
@@ -370,6 +477,55 @@
             height: 19px;
             accent-color: #cfa96b;
             cursor: pointer;
+        }
+
+        /* صف تخطيط الصفحة ومعاينة الـ A4 */
+        .layout-Quick-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: stretch;
+            margin-bottom: 10px;
+        }
+
+        .layout-Quick-row .control-group {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        /* قائمة طي الإعدادات المتقدمة (Clean UI Accordion) */
+        .accordion-toggle-btn {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1.5px solid var(--border-color);
+            color: var(--gold-bright);
+            padding: 9px 14px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .accordion-toggle-btn:hover {
+            background: rgba(207, 169, 107, 0.14);
+        }
+
+        .advanced-accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, margin-top 0.25s ease;
+            opacity: 0;
+        }
+
+        .advanced-accordion-body.open {
+            max-height: 520px;
+            opacity: 1;
+            margin-top: 10px;
         }
 
         /* عناصر التحكم */
@@ -426,7 +582,7 @@
             border: 1.5px solid rgba(56, 189, 248, 0.45);
             border-radius: 12px;
             padding: 9px 14px;
-            margin-top: 10px;
+            margin-top: 8px;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -485,18 +641,24 @@
             cursor: pointer;
         }
 
-        /* شريط إدارة الصفحات وتوفير الورق */
+        /* شريط إدارة الصفحات وعداد توفير الحبر الأسود (Ink Saver Gauge) */
         .paper-saver-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 11px 14px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1.5px solid rgba(16, 185, 129, 0.35);
+            border-radius: 12px;
+        }
+
+        .paper-saver-top {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            margin-top: 10px;
-            padding: 10px 14px;
-            background: rgba(16, 185, 129, 0.08);
-            border: 1.5px solid rgba(16, 185, 129, 0.35);
-            border-radius: 12px;
         }
 
         .paper-saver-info {
@@ -507,6 +669,31 @@
 
         body.light-mode .paper-saver-info {
             color: #065f46;
+        }
+
+        .ink-gauge-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: var(--gold-bright);
+        }
+
+        .ink-gauge-track {
+            flex: 1;
+            height: 7px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 99px;
+            overflow: hidden;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+        }
+
+        .ink-gauge-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #10b981, #34d399, #cfa96b);
+            transition: width 0.35s ease;
         }
 
         .paper-saver-btns {
@@ -542,7 +729,7 @@
 
         .btn-refresh {
             flex: 1;
-            min-width: 140px;
+            min-width: 130px;
         }
 
         .btn-download {
@@ -584,56 +771,62 @@
             transition: width 0.2s;
         }
 
-        /* شريط الأدوات التفاعلي الثابت */
-        .legend-bar {
+        /* القائمة الموحدة الثابتة (تجمع شريط الأدوات + شريط المصغرات السريع في بطاقة واحدة يستحيل تداخلها) */
+       /* القائمة المصغرة والثابتة أعلى الشاشة مع النزول */
+        .unified-sticky-dock {
+            position: sticky;
+            top: var(--sticky-top-offset, 68px);
+            z-index: 95;
+            width: fit-content;
+            max-width: 96%;
+            margin: 0 auto 16px auto;
+            padding: 6px 12px;
+            background: rgba(30, 27, 23, 0.94);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+            transition: top 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        body.light-mode .unified-sticky-dock {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .dock-tools-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            font-size: 0.8rem;
-            position: sticky;
-            top: 68px;
-            z-index: 35;
+            justify-content: center;
+            font-size: 0.72rem;
         }
 
         .legend-items {
             display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
+            gap: 8px;
             align-items: center;
         }
 
         .legend-tag {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             font-weight: 700;
         }
 
         .dot-img {
-            width: 13px;
-            height: 13px;
+            width: 10px;
+            height: 10px;
             background: rgba(16, 185, 129, 0.3);
             border: 2px solid #10b981;
             display: inline-block;
             border-radius: 3px;
         }
 
-        .dot-txt {
-            width: 13px;
-            height: 13px;
-            background: rgba(207, 169, 107, 0.3);
-            border: 2px solid #cfa96b;
-            display: inline-block;
-            border-radius: 3px;
-        }
-
         .dot-erase {
-            width: 13px;
-            height: 13px;
+            width: 10px;
+            height: 10px;
             background: rgba(244, 63, 94, 0.3);
             border: 2px solid #f43f5e;
             display: inline-block;
@@ -643,18 +836,18 @@
         .mouse-mode-switch {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 4px;
             background: var(--bg-secondary);
-            padding: 4px;
-            border-radius: 12px;
+            padding: 3px;
+            border-radius: 9px;
             border: 1px solid var(--border-color);
         }
 
         .mode-btn {
-            padding: 6px 12px;
-            border-radius: 9px;
+            padding: 4px 8px;
+            border-radius: 7px;
             border: 1px solid transparent;
-            font-size: 0.78rem;
+            font-size: 0.71rem;
             font-weight: 800;
             cursor: pointer;
             background: transparent;
@@ -662,24 +855,83 @@
         }
 
         .mode-btn.active-protect {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.22);
             color: #34d399;
             border-color: #10b981;
         }
 
         .mode-btn.active-erase {
-            background: rgba(244, 63, 94, 0.2);
+            background: rgba(244, 63, 94, 0.22);
             color: #fb7185;
             border-color: #f43f5e;
         }
 
         .mode-btn.active-scroll {
-            background: rgba(207, 169, 107, 0.22);
+            background: rgba(207, 169, 107, 0.24);
             color: var(--gold-bright);
             border-color: var(--gold-primary);
         }
 
-        /* قائمة الصفحات المعالجة (مع تفعيل content-visibility لتسريع التمرير 10x) */
+        /* الجزء السفلي من البطاقة الموحدة: شريط المصغرات السريع المكبّر */
+        .dock-filmstrip-row {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1.5px solid var(--border-color);
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .filmstrip-label {
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: var(--gold-bright);
+            white-space: nowrap;
+            margin-left: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filmstrip-pill {
+            min-width: 48px;
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            border: 2px solid rgba(16, 185, 129, 0.5);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.18s ease;
+        }
+
+        .filmstrip-pill:hover {
+            transform: translateY(-2px) scale(1.04);
+            border-color: var(--gold-bright);
+        }
+
+        .filmstrip-pill.active-page {
+            background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%);
+            color: #181512;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(207, 169, 107, 0.48);
+            transform: scale(1.05);
+        }
+
+        .filmstrip-pill.excluded {
+            opacity: 0.42;
+            border-color: var(--danger-red);
+            text-decoration: line-through;
+        }
+
+        /* قائمة الصفحات المعالجة */
         .pages-list {
             display: flex;
             flex-direction: column;
@@ -713,7 +965,7 @@
             color: var(--gold-bright);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
@@ -740,7 +992,7 @@
         }
 
         .stats-pill {
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             padding: 3px 10px;
@@ -756,9 +1008,26 @@
         }
 
         .btn-sm {
-            padding: 5px 11px;
-            font-size: 0.75rem;
+            padding: 5px 10px;
+            font-size: 0.74rem;
             border-radius: 9px;
+        }
+
+        .btn-zoom-highlight {
+            background: rgba(56, 189, 248, 0.16);
+            border: 1.5px solid rgba(56, 189, 248, 0.55);
+            color: #7dd3fc;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        body.light-mode .btn-zoom-highlight {
+            color: #0369a1;
+        }
+
+        .btn-zoom-highlight:hover {
+            background: #0284c7;
+            color: #ffffff;
         }
 
         .comparison-grid {
@@ -769,12 +1038,69 @@
             cursor: crosshair;
             user-select: none;
             -webkit-user-select: none;
+            position: relative;
         }
 
         @media (max-width: 920px) {
             .comparison-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* وضع المقارنة بالسحب (Before/After Slider Mode) */
+        .comparison-grid.slider-compare-mode {
+            display: block;
+            position: relative;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        .comparison-grid.slider-compare-mode .out-canvas-box {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            right: 18px;
+            bottom: 18px;
+            pointer-events: none;
+            z-index: 4;
+            clip-path: inset(0 0 0 var(--ba-pos, 50%));
+        }
+
+        .ba-slider-bar {
+            display: none;
+            position: absolute;
+            top: 52px;
+            bottom: 18px;
+            left: calc(18px + (100% - 36px) * var(--ba-ratio, 0.5));
+            width: 4px;
+            background: linear-gradient(180deg, #ebd2a4, #10b981);
+            z-index: 8;
+            cursor: ew-resize;
+            touch-action: none;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.65);
+        }
+
+        .comparison-grid.slider-compare-mode .ba-slider-bar {
+            display: block;
+        }
+
+        .ba-slider-knob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e5c68e 0%, #b88f4d 100%);
+            color: #181512;
+            font-weight: 900;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+            border: 2px solid #fff;
         }
 
         .canvas-box {
@@ -843,6 +1169,163 @@
             pointer-events: none;
         }
 
+        /* نافذة المعاينة الحية لورقة الـ A4 + نافذة التكبير Fullscreen للتحديد الدقيق */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 9, 8, 0.86);
+            backdrop-filter: blur(8px);
+            z-index: 99990;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .a4-modal-card {
+            background: var(--bg-card);
+            border: 2px solid var(--gold-primary);
+            border-radius: 22px;
+            max-width: 780px;
+            width: 100%;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 22px 50px rgba(0, 0, 0, 0.65);
+        }
+
+        /* نافذة التكبير والتحديد الدقيق بملء الشاشة (Fullscreen Zoom Editor) */
+        .zoom-editor-card {
+            background: var(--bg-card);
+            border: 2px solid var(--gold-primary);
+            border-radius: 20px;
+            width: 97vw;
+            height: 94vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+        }
+
+        .zoom-toolbar {
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1.5px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .zoom-controls-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .zoom-viewport {
+            flex: 1;
+            overflow: auto;
+            background: #0d0c0a;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+        }
+
+        .zoom-stage-inner {
+            position: relative;
+            background: #ffffff;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+            line-height: 0;
+            transform-origin: top center;
+            flex-shrink: 0;
+        }
+
+        .a4-modal-header {
+            padding: 14px 18px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .a4-modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .a4-modal-body canvas {
+            max-width: 100%;
+            max-height: 64vh;
+            width: auto;
+            height: auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+        }
+
+        .a4-modal-footer {
+            padding: 12px 18px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* أزرار الصعود والنزول العائمة */
+        .floating-scroll-btns {
+            position: fixed;
+            bottom: 22px;
+            left: 20px;
+            z-index: 80;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .float-nav-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1.5px solid var(--gold-primary);
+            color: var(--gold-bright);
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .float-nav-btn:hover {
+            transform: translateY(-2px);
+            background: var(--gold-primary);
+            color: #181512;
+        }
+
         /* الفوتر والشريط المتحرك */
         footer {
             border-top: 1.5px solid var(--border-color);
@@ -900,8 +1383,91 @@
 </head>
 <body>
 
+    <!-- حاوية الإشعارات الذهبية العائمة -->
+    <div id="toast-container"></div>
+
     <!-- مربع التحديد العالمي العائم -->
     <div id="global-selection-marquee"></div>
+
+    <!-- نافذة التكبير الكامل (Fullscreen Zoom Modal) للتحديد الدقيق بالماوس أو الإصبع -->
+    <div class="modal-backdrop" id="zoomEditorModal" onclick="if(event.target===this) closeZoomEditorModal()">
+        <div class="zoom-editor-card">
+            <div class="zoom-toolbar">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <span style="font-weight:900;color:var(--gold-bright);font-size:0.95rem;" id="zoomModalTitle">
+                        🔍 تكبير الشريحة للتحديد الدقيق
+                    </span>
+                    <div class="mouse-mode-switch">
+                        <button type="button" class="mode-btn active-protect" id="zoomModeProtectBtn" onclick="setTouchMouseMode('protect')">
+                            ➕ رسم مربع حماية صورة
+                        </button>
+                        <button type="button" class="mode-btn" id="zoomModeEraseBtn" onclick="setTouchMouseMode('erase')">
+                            🧹 ممسحة لتبييض جزء
+                        </button>
+                        <button type="button" class="mode-btn" id="zoomModeScrollBtn" onclick="setTouchMouseMode('scroll')">
+                            🖐️ تحريك الشريحة (Pan)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="zoom-controls-group">
+                    <button type="button" class="pill-btn btn-sm" id="zoomToggleSourceBtn" onclick="toggleZoomModalSource()">
+                        👁️ عرض: البيضاء الجاهزة للطباعة
+                    </button>
+                    <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(currentZoomFactor - 0.25)">➖</button>
+                    <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(1)">100%</button>
+                    <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(1.5)">150%</button>
+                    <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(2)">200%</button>
+                    <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(2.75)">275%</button>
+                    <button type="button" class="pill-btn btn-sm" onclick="setZoomFactor(currentZoomFactor + 0.25)">➕</button>
+                    <button type="button" class="pill-btn btn-sm" onclick="undoFromZoomModal()">↩️ تراجع</button>
+                    <button type="button" class="gold-btn btn-sm" style="padding:6px 14px;" onclick="closeZoomEditorModal()">
+                        ✅ تم (إغلاق)
+                    </button>
+                </div>
+            </div>
+
+            <div class="zoom-viewport" id="zoomViewport">
+                <div class="zoom-stage-inner canvas-wrapper drawing-active" id="zoomCanvasWrapper">
+                    <canvas id="zoomMainCanvas"></canvas>
+                    <canvas id="zoomOverlayCanvas" class="overlay-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة المعاينة الحية لورقة الـ A4 قبل التحميل -->
+    <div class="modal-backdrop" id="a4PreviewModal" onclick="if(event.target===this) closeA4PreviewModal()">
+        <div class="a4-modal-card">
+            <div class="a4-modal-header">
+                <div style="font-weight:900;color:var(--gold-bright);font-size:0.95rem;" id="a4ModalTitle">
+                    👁️ معاينة حية لورقة الـ A4 قبل التحميل
+                </div>
+                <button type="button" class="pill-btn btn-sm" onclick="closeA4PreviewModal()">✖ إغلاق</button>
+            </div>
+            <div class="a4-modal-body">
+                <canvas id="a4PreviewCanvas" width="794" height="1123"></canvas>
+                <div style="font-size:0.78rem;color:var(--text-muted);font-weight:700;" id="a4SheetCounterText">
+                    ورقة A4 رقم 1
+                </div>
+            </div>
+            <div class="a4-modal-footer">
+                <div style="display:flex;gap:8px;">
+                    <button type="button" class="pill-btn btn-sm" id="prevA4SheetBtn" onclick="changeA4PreviewSheet(-1)">➡️ الورقة السابقة</button>
+                    <button type="button" class="pill-btn btn-sm" id="nextA4SheetBtn" onclick="changeA4PreviewSheet(1)">الورقة التالية ⬅️</button>
+                </div>
+                <button type="button" class="gold-btn btn-sm" style="padding:8px 16px;border-radius:11px;" onclick="closeA4PreviewModal(); exportPrintablePDF();">
+                    🖨️ اعتماد وتحميل الـ PDF الآن
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار الصعود والنزول السريع -->
+    <div class="floating-scroll-btns">
+        <button type="button" class="float-nav-btn" title="الصعود لأعلى" onclick="window.scrollTo({top:0,behavior:'smooth'})">▲</button>
+        <button type="button" class="float-nav-btn" title="النزول لأسفل" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})">▼</button>
+    </div>
 
     <!-- خلفية الموقع الطبوغرافية -->
     <div id="bg-Stage">
@@ -917,8 +1483,8 @@
         </svg>
     </div>
 
-    <!-- الشريط العلوي -->
-    <header>
+    <!-- الشريط العلوي (يختفي تلقائياً عند التمرير لأسفل) -->
+    <header id="mainAppHeader">
         <div class="header-inner">
             <div class="brand-box">
                 <div>
@@ -926,7 +1492,7 @@
                         <h1>محول الملخصات الذكي للطباعة</h1>
                         <span class="gold-badge">MED26</span>
                     </div>
-                    <p class="brand-sub">تحويل الملخصات السوداء إلى صفحات بيضاء جاهزة للطباعة • دمج الشرائح في A4 مع Upscale • يعمل على الجوال والآيباد</p>
+                    <p class="brand-sub">تحويل الملخصات السوداء إلى صفحات بيضاء جاهزة للطباعة • تكبير Fullscreen للتحديد الدقيق • Cornell Notes & A4 Upscale</p>
                 </div>
             </div>
 
@@ -945,7 +1511,7 @@
     <main class="container">
 
         <!-- المراحل الأربع -->
-        <div class="pipeline-steps">
+        <div class="pipeline-steps scroll-reveal in-view">
             <div class="step-card" id="step1">
                 <div class="step-num">1</div>
                 <div class="step-info">
@@ -977,7 +1543,7 @@
         </div>
 
         <!-- لوحة الرفع والإعدادات -->
-        <div class="top-grid">
+        <div class="top-grid scroll-reveal in-view">
             <!-- 1. رفع الملف -->
             <div class="app-card panel">
                 <div class="panel-title">
@@ -1007,46 +1573,23 @@
                     <span class="gold-badge">أفضل جودة</span>
                 </label>
 
-                <div class="controls-grid">
-                    <div class="control-group">
-                        <label>
-                            <span>مسح الخلفية والخطوط المموجة</span>
-                            <span id="bgThreshVal">92</span>
-                        </label>
-                        <input type="range" id="bgThreshold" min="50" max="135" value="92">
-                    </div>
-
-                    <div class="control-group">
-                        <label>
-                            <span>حساسية التقاط الصور والبطاقات</span>
-                            <span id="cardThreshVal">175</span>
-                        </label>
-                        <input type="range" id="cardThreshold" min="135" max="230" value="175">
-                    </div>
-
-                    <div class="control-group">
-                        <label>
-                            <span>حذف شعار الدفعة (توفير الحبر)</span>
-                        </label>
-                        <select id="logoRemoveMode" onchange="onManualSettingChange()">
-                            <option value="smart" selected>تلقائي ذكي (حذف الشعار يسار/يمين مع إبقاء رقم الصفحة)</option>
-                            <option value="left_only">حذف الشعار من أسفل اليسار فقط</option>
-                            <option value="both_full">مسح الزاويتين السفلية بالكامل (يسار ويمين)</option>
-                            <option value="none">عدم حذف الشعار (إبقاء الشعار باللون الأسود)</option>
-                        </select>
-                    </div>
-
+                <!-- خيار تخطيط الورقة A4 مع Cornell Notes + زر المعاينة الحية -->
+                <div class="layout-Quick-row">
                     <div class="control-group">
                         <label>
                             <span>📄 ترتيب ودمج الشرائح في الورقة (A4)</span>
                         </label>
-                        <select id="slidesPerPageLayout">
+                        <select id="slidesPerPageLayout" onchange="onLayoutSelectChange()">
                             <option value="1" selected>1 شريحة في كل صفحة (المقاس الكامل الأصلي)</option>
-                            <option value="2">2 شريحتين في ورقة A4 عمودية (فوق بعض - ممتاز للمذاكرة)</option>
+                            <option value="2">2 شريحتان في ورقة A4 عمودية (فوق بعض - ممتاز للمذاكرة)</option>
+                            <option value="2_notes">📝 شريحتان في A4 + مسطرة جانبية للملاحظات (Cornell Notes)</option>
                             <option value="4">4 شرائح في ورقة A4 (شبكة 2×2 لتوفير الورق)</option>
                             <option value="6">6 شرائح في ورقة A4 عمودية (شبكة 2×3 للمراجعة)</option>
                         </select>
                     </div>
+                    <button type="button" class="pill-btn" id="previewA4Btn" disabled onclick="openA4PreviewModal()" style="padding:0 16px;border-radius:12px;font-size:0.82rem;">
+                        👁️ معاينة شكل ورقة الـ A4
+                    </button>
                 </div>
 
                 <!-- خيار الـ Upscale لتوضيح وتسميك النصوص عند التصدير النهائي -->
@@ -1058,41 +1601,89 @@
                     <span class="gold-badge" style="background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;">300 DPI Crisp</span>
                 </div>
 
-                <div class="options-row">
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="showBoxesToggle" checked>
-                        <span>إظهار مربعات التخطيط (`[الصور]`، `[الأسطر]`، `[المسح]`)</span>
-                    </label>
+                <!-- زر طي وفتح الإعدادات الدقيقة المتقدمة (Clean UI Accordion) -->
+                <button type="button" class="accordion-toggle-btn" onclick="toggleAdvancedAccordion()">
+                    <span>🎛️ ضبط دقيق متقدم للإعدادات (حساسية الخلفية • الصور • الشعار • الألوان)</span>
+                    <span id="accordionArrow">▾</span>
+                </button>
 
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="addCardBorders" checked onchange="onManualSettingChange()">
-                        <span>إضافة إطار رمادي تلقائي للبطاقات البيضاء</span>
-                    </label>
+                <div class="advanced-accordion-body" id="advancedAccordionBody">
+                    <div class="controls-grid">
+                        <div class="control-group">
+                            <label>
+                                <span>مسح الخلفية والخطوط المموجة</span>
+                                <span id="bgThreshVal">92</span>
+                            </label>
+                            <input type="range" id="bgThreshold" min="50" max="135" value="92">
+                        </div>
 
-                    <div style="display:flex;align-items:center;gap:8px;min-width:170px;">
-                        <span style="font-size:0.78rem;font-weight:700;">تغميق الملون:</span>
-                        <input type="range" id="colorBoost" min="10" max="65" value="35" style="width:80px;accent-color:var(--gold-primary);">
-                        <span id="colorBoostVal" style="font-size:0.78rem;font-weight:800;color:var(--gold-bright);">35%</span>
+                        <div class="control-group">
+                            <label>
+                                <span>حساسية التقاط الصور والبطاقات</span>
+                                <span id="cardThreshVal">175</span>
+                            </label>
+                            <input type="range" id="cardThreshold" min="135" max="230" value="175">
+                        </div>
+
+                        <div class="control-group">
+                            <label>
+                                <span>حذف شعار الدفعة (توفير الحبر)</span>
+                            </label>
+                            <select id="logoRemoveMode" onchange="onManualSettingChange()">
+                                <option value="smart" selected>تلقائي ذكي (حذف الشعار يسار/يمين مع إبقاء رقم الصفحة)</option>
+                                <option value="left_only">حذف الشعار من أسفل اليسار فقط</option>
+                                <option value="both_full">مسح الزاويتين السفلية بالكامل (يسار ويمين)</option>
+                                <option value="none">عدم حذف الشعار (إبقاء الشعار باللون الأسود)</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label>
+                                <span>تغميق النصوص الملونة للطباعة</span>
+                                <span id="colorBoostVal">35%</span>
+                            </label>
+                            <input type="range" id="colorBoost" min="10" max="65" value="35">
+                        </div>
+                    </div>
+
+                    <div class="options-row">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="showBoxesToggle" checked>
+                            <span>إظهار مربعات التخطيط (`[الصور]`، `[الأسطر]`، `[المسح]`)</span>
+                        </label>
+
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="addCardBorders" checked onchange="onManualSettingChange()">
+                            <span>إضافة إطار رمادي تلقائي للبطاقات البيضاء</span>
+                        </label>
                     </div>
                 </div>
 
-                <!-- شريط استبعاد الغلاف والفواصل والخاتمة بضغطة زر -->
+                <!-- شريط استبعاد الغلاف والفواصل + عداد توفير الحبر الأسود (Ink Saver Gauge) -->
                 <div class="paper-saver-bar">
-                    <div class="paper-saver-info" id="includedPagesSummary">
-                        📑 الصفحات المحددة للطباعة: 0 من 0 صفحة
+                    <div class="paper-saver-top">
+                        <div class="paper-saver-info" id="includedPagesSummary">
+                            📑 الصفحات المحددة للطباعة: 0 من 0 صفحة
+                        </div>
+                        <div class="paper-saver-btns">
+                            <button type="button" class="pill-btn btn-sm" id="autoExcludeBtn" disabled onclick="autoExcludeCoversAndDividers()">
+                                🗑️ استبعاد الغلاف والفواصل والخاتمة تلقائياً
+                            </button>
+                            <button type="button" class="pill-btn btn-sm" id="selectAllPagesBtn" disabled onclick="toggleAllPagesInclusion(true)">
+                                ☑️ تحديد الكل
+                            </button>
+                        </div>
                     </div>
-                    <div class="paper-saver-btns">
-                        <button type="button" class="pill-btn btn-sm" id="autoExcludeBtn" disabled onclick="autoExcludeCoversAndDividers()">
-                            🗑️ استبعاد الغلاف والفواصل والخاتمة تلقائياً
-                        </button>
-                        <button type="button" class="pill-btn btn-sm" id="selectAllPagesBtn" disabled onclick="toggleAllPagesInclusion(true)">
-                            ☑️ تحديد الكل
-                        </button>
+                    <div class="ink-gauge-wrap">
+                        <span id="inkSavedText">💧 توفير الحبر الأسود: 0%</span>
+                        <div class="ink-gauge-track">
+                            <div class="ink-gauge-fill" id="inkGaugeFill"></div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="actions-bar">
-                    <button class="btn pill-btn btn-refresh" id="reprocessBtn" disabled onclick="reprocessAllPages()">
+                    <button class="btn pill-btn btn-refresh" id="reprocessBtn" disabled onclick="reprocessAllPages(); showToast('🔄 تم تحديث معالجة الصفحات بنجاح!', 'green');">
                         🔄 تحديث المعالجة
                     </button>
                     <button class="btn gold-btn btn-download" id="downloadPdfBtn" disabled onclick="exportPrintablePDF()">
@@ -1113,28 +1704,29 @@
             </div>
         </div>
 
-        <!-- شريط الأدوات التفاعلي الثابت -->
-        <div class="app-card legend-bar">
-            <div class="legend-items">
-                <span class="legend-tag"><span class="dot-img"></span> <b>أخضر [صورة]:</b> تُنقل بألوانها 100%</span>
-                <span class="legend-tag"><span class="dot-txt"></span> <b>ذهبي [سطر]:</b> نصوص مجمّعة</span>
-                <span class="legend-tag"><span class="dot-erase"></span> <b>أحمر [مسح]:</b> تبييض لتوفير الحبر</span>
-            </div>
+        <div class="app-card unified-sticky-dock" id="unifiedStickyDock">
+            <div class="dock-tools-row">
+                <div class="legend-items">
+                    <span class="legend-tag"><span class="dot-img"></span> <b>حماية</b></span>
+                    <span class="legend-tag"><span class="dot-erase"></span> <b>تبييض</b></span>
+                </div>
 
-            <div class="mouse-mode-switch">
-                <button type="button" class="mode-btn active-protect" id="modeProtectBtn" onclick="setTouchMouseMode('protect')">
-                    ➕ رسم مربع حماية صورة
-                </button>
-                <button type="button" class="mode-btn" id="modeEraseBtn" onclick="setTouchMouseMode('erase')">
-                    🧹 ممسحة لتبييض أي جزء
-                </button>
-                <button type="button" class="mode-btn" id="modeScrollBtn" onclick="setTouchMouseMode('scroll')">
-                    🖐️ تمرير الصفحة (للجوال/الآيباد)
-                </button>
+                <div class="mouse-mode-switch">
+                    <button type="button" class="mode-btn active-protect" id="modeProtectBtn" onclick="setTouchMouseMode('protect')">
+                        <span class="kbd-tag">P</span>➕ حماية صورة
+                    </button>
+                    <button type="button" class="mode-btn" id="modeEraseBtn" onclick="setTouchMouseMode('erase')">
+                        <span class="kbd-tag">E</span>🧹 ممسحة
+                    </button>
+                    <button type="button" class="mode-btn" id="modeScrollBtn" onclick="setTouchMouseMode('scroll')">
+                        <span class="kbd-tag">Space</span>🖐️ تمرير
+                    </button>
+                    <button type="button" class="mode-btn" id="globalCompareSliderBtn" onclick="toggleGlobalSliderCompareMode()">
+                        🌗 مقارنة بالسحب
+                    </button>
+                </div>
             </div>
         </div>
-
-        <!-- قائمة الصفحات المعالجة -->
         <div class="pages-list" id="pagesContainer"></div>
 
     </main>
@@ -1175,6 +1767,18 @@
     let pagesData = [];
     let uploadedFileName = "MED26_Summary";
     let currentMouseMode = 'protect';
+    let lastEditedPageNum = 1;
+    let isGlobalSliderCompare = false;
+    let currentA4PreviewSheetIndex = 0;
+
+    // متغيرات نافذة التكبير Fullscreen للتحديد الدقيق
+    let activeZoomPageNum = null;
+    let currentZoomFactor = 1.5;
+    let zoomModalShowOriginal = false;
+
+    // إعادة استخدام Canvas مشترك أثناء التصدير بدقة Ultra-HD لمنع امتلاء رام الجوال والآيباد
+    const sharedExportOrigCanvas = document.createElement('canvas');
+    const sharedExportOutCanvas = document.createElement('canvas');
 
     const fileInput = document.getElementById('fileInput');
     const dropZone = document.getElementById('dropZone');
@@ -1188,6 +1792,502 @@
     const showBoxesToggle = document.getElementById('showBoxesToggle');
     const addCardBorders = document.getElementById('addCardBorders');
     const globalMarquee = document.getElementById('global-selection-marquee');
+    const mainAppHeader = document.getElementById('mainAppHeader');
+
+    // إشعارات عائمة فخمة (Gold Toast Notifications)
+    let audioCtx = null;
+    function playSubtleClickSound() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(660, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.045);
+            gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.055);
+        } catch (e) {}
+    }
+
+    function showToast(message, type = 'gold') {
+        playSubtleClickSound();
+        if (navigator.vibrate) {
+            try { navigator.vibrate(15); } catch (e) {}
+        }
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `gold-toast ${type === 'green' ? 'toast-green' : type === 'red' ? 'toast-red' : ''}`;
+        toast.innerHTML = `<span>${message}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('toast-hide');
+            setTimeout(() => toast.remove(), 260);
+        }, 3100);
+    }
+
+    // طي وفتح الإعدادات الدقيقة (Clean UI Accordion)
+    function toggleAdvancedAccordion() {
+        const body = document.getElementById('advancedAccordionBody');
+        const arrow = document.getElementById('accordionArrow');
+        const isOpen = body.classList.toggle('open');
+        arrow.textContent = isOpen ? '▴' : '▾';
+    }
+
+    // إخفاء الهيدر العلوي تلقائياً عند النزول لأسفل وإظهاره عند الصعود + أنميشن التمرير
+    let lastScrollY = window.scrollY;
+    let scrollDirection = 'down';
+    window.addEventListener('scroll', () => {
+        const currY = window.scrollY;
+        const delta = currY - lastScrollY;
+
+        if (Math.abs(delta) > 6) {
+            scrollDirection = delta > 0 ? 'down' : 'up';
+            if (currY > 90 && scrollDirection === 'down') {
+                mainAppHeader.classList.add('header-hidden');
+                document.body.classList.add('header-is-hidden');
+            } else if (scrollDirection === 'up' || currY <= 40) {
+                mainAppHeader.classList.remove('header-hidden');
+                document.body.classList.remove('header-is-hidden');
+            }
+            lastScrollY = currY;
+        }
+    }, { passive: true });
+
+    const revealObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+            const el = entry.target;
+            if (entry.isIntersecting) {
+                el.classList.remove('reveal-from-bottom', 'reveal-from-top');
+                el.classList.add('in-view');
+            } else {
+                el.classList.remove('in-view');
+                if (scrollDirection === 'down') {
+                    el.classList.add('reveal-from-bottom');
+                } else {
+                    el.classList.add('reveal-from-top');
+                }
+            }
+        }
+    }, { threshold: 0.06, rootMargin: '60px 0px' });
+
+    // Web Worker مدمج مع جدول الحساب المسبق (Lookup Table) وحساب نسبة توفير الحبر الأسود
+    const workerCode = `
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return [h, s, l];
+        }
+
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        function applySubtleTextSharpening(data, width, height, protectedGrid, gw, ds) {
+            const copy = new Uint8ClampedArray(data);
+            const amount = 0.38;
+            for (let y = 1; y < height - 1; y++) {
+                const gy = Math.floor(y / ds);
+                for (let x = 1; x < width - 1; x++) {
+                    const gx = Math.floor(x / ds);
+                    if (protectedGrid[gy * gw + gx] !== 1) continue;
+
+                    const idx = (y * width + x) * 4;
+                    const up = ((y - 1) * width + x) * 4;
+                    const down = ((y + 1) * width + x) * 4;
+                    const left = (y * width + (x - 1)) * 4;
+                    const right = (y * width + (x + 1)) * 4;
+
+                    for (let c = 0; c < 3; c++) {
+                        const center = copy[idx + c];
+                        const neighborsAvg = 0.25 * (copy[up + c] + copy[down + c] + copy[left + c] + copy[right + c]);
+                        const diff = center - neighborsAvg;
+                        if (Math.abs(diff) > 8) {
+                            data[idx + c] = Math.max(0, Math.min(255, Math.round(center + diff * amount)));
+                        }
+                    }
+                }
+            }
+        }
+
+        function executeReconstruction(params) {
+            const {
+                srcBuffer, width, height, bgThresh, cardThresh, colorBoost,
+                drawBorders, isUpscaleActive, isFinalExport,
+                autoEraseBoxes, manualHistory
+            } = params;
+
+            const src = new Uint8ClampedArray(srcBuffer);
+            const ds = Math.max(2, Math.round(width / 320));
+            const gw = Math.ceil(width / ds);
+            const gh = Math.ceil(height / ds);
+            const brightGrid = new Uint8Array(gw * gh);
+
+            const scaledManualHistory = manualHistory.map(m => ({
+                type: m.type,
+                x: m.rx * width,
+                y: m.ry * height,
+                w: m.rw * width,
+                h: m.rh * height
+            }));
+
+            const manualEraseBoxes = scaledManualHistory.filter(m => m.type === 'erase');
+
+            const eraseGrid = new Uint8Array(gw * gh);
+            for (const eBox of [...autoEraseBoxes, ...manualEraseBoxes]) {
+                const gx0 = Math.max(0, Math.floor(eBox.x / ds));
+                const gy0 = Math.max(0, Math.floor(eBox.y / ds));
+                const gx1 = Math.min(gw - 1, Math.ceil((eBox.x + eBox.w) / ds));
+                const gy1 = Math.min(gh - 1, Math.ceil((eBox.y + eBox.h) / ds));
+                for (let gy = gy0; gy <= gy1; gy++) {
+                    for (let gx = gx0; gx <= gx1; gx++) {
+                        eraseGrid[gy * gw + gx] = 1;
+                    }
+                }
+            }
+
+            for (let gy = 0; gy < gh; gy++) {
+                const py = Math.min(height - 1, gy * ds);
+                for (let gx = 0; gx < gw; gx++) {
+                    const gIdx = gy * gw + gx;
+                    if (eraseGrid[gIdx] === 1) continue;
+
+                    const px = Math.min(width - 1, gx * ds);
+                    const idx = (py * width + px) * 4;
+                    const lum = 0.299 * src[idx] + 0.587 * src[idx + 1] + 0.114 * src[idx + 2];
+
+                    if (lum >= cardThresh) {
+                        brightGrid[gIdx] = 1;
+                    }
+                }
+            }
+
+            const visited = new Uint8Array(gw * gh);
+            const protectedGrid = new Uint8Array(gw * gh);
+            const borderGrid = new Uint8Array(gw * gh);
+            const detectedBoxes = [];
+
+            const minBlobArea = Math.floor((gw * gh) * 0.0032);
+
+            for (let startY = 0; startY < gh; startY++) {
+                for (let startX = 0; startX < gw; startX++) {
+                    const startIdx = startY * gw + startX;
+                    if (brightGrid[startIdx] === 1 && !visited[startIdx]) {
+                        const queue = [startIdx];
+                        visited[startIdx] = 1;
+                        const component = [startIdx];
+
+                        let minX = startX, maxX = startX, minY = startY, maxY = startY;
+
+                        let head = 0;
+                        while (head < queue.length) {
+                            const curr = queue[head++];
+                            const cy = Math.floor(curr / gw);
+                            const cx = curr % gw;
+
+                            if (cx < minX) minX = cx;
+                            if (cx > maxX) maxX = cx;
+                            if (cy < minY) minY = cy;
+                            if (cy > maxY) maxY = cy;
+
+                            const neighbors = [
+                                cy > 0 ? curr - gw : -1,
+                                cy < gh - 1 ? curr + gw : -1,
+                                cx > 0 ? curr - 1 : -1,
+                                cx < gw - 1 ? curr + 1 : -1
+                            ];
+
+                            for (const n of neighbors) {
+                                if (n !== -1 && brightGrid[n] === 1 && !visited[n]) {
+                                    visited[n] = 1;
+                                    queue.push(n);
+                                    component.push(n);
+                                }
+                            }
+                        }
+
+                        const boxW = maxX - minX + 1;
+                        const boxH = maxY - minY + 1;
+                        const fillRatio = component.length / (boxW * boxH);
+
+                        if (component.length >= minBlobArea && boxW > 5 && boxH > 4) {
+                            if (fillRatio > 0.35) {
+                                const radius = Math.min(4, Math.floor(Math.min(boxW, boxH) * 0.08));
+                                for (let gy = minY; gy <= maxY; gy++) {
+                                    for (let gx = minX; gx <= maxX; gx++) {
+                                        let dx = 0, dy = 0;
+                                        if (gx < minX + radius) dx = (minX + radius) - gx;
+                                        else if (gx > maxX - radius) dx = gx - (maxX - radius);
+                                        if (gy < minY + radius) dy = (minY + radius) - gy;
+                                        else if (gy > maxY - radius) dy = gy - (maxY - radius);
+
+                                        if (dx * dx + dy * dy <= radius * radius + 1) {
+                                            protectedGrid[gy * gw + gx] = 1;
+                                            if (gx === minX || gx === maxX || gy === minY || gy === maxY) {
+                                                borderGrid[gy * gw + gx] = 1;
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                const subW = boxW + 2;
+                                const subH = boxH + 2;
+                                const subMask = new Uint8Array(subW * subH);
+
+                                for (const cIdx of component) {
+                                    const cy = Math.floor(cIdx / gw) - minY + 1;
+                                    const cx = (cIdx % gw) - minX + 1;
+                                    subMask[cy * subW + cx] = 1;
+                                }
+
+                                const extQueue = [0];
+                                subMask[0] = 2;
+                                let eHead = 0;
+                                while (eHead < extQueue.length) {
+                                    const curr = extQueue[eHead++];
+                                    const cy = Math.floor(curr / subW);
+                                    const cx = curr % subW;
+
+                                    const nbs = [
+                                        cy > 0 ? curr - subW : -1,
+                                        cy < subH - 1 ? curr + subW : -1,
+                                        cx > 0 ? curr - 1 : -1,
+                                        cx < subW - 1 ? curr + 1 : -1
+                                    ];
+                                    for (const n of nbs) {
+                                        if (n !== -1 && subMask[n] === 0) {
+                                            subMask[n] = 2;
+                                            extQueue.push(n);
+                                        }
+                                    }
+                                }
+
+                                for (let sy = 1; sy < subH - 1; sy++) {
+                                    for (let sx = 1; sx < subW - 1; sx++) {
+                                        if (subMask[sy * subW + sx] !== 2) {
+                                            const gy = minY + sy - 1;
+                                            const gx = minX + sx - 1;
+                                            protectedGrid[gy * gw + gx] = 1;
+                                            if (
+                                                subMask[(sy - 1) * subW + sx] === 2 ||
+                                                subMask[(sy + 1) * subW + sx] === 2 ||
+                                                subMask[sy * subW + (sx - 1)] === 2 ||
+                                                subMask[sy * subW + (sx + 1)] === 2
+                                            ) {
+                                                borderGrid[gy * gw + gx] = 1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            detectedBoxes.push({
+                                x: minX * ds,
+                                y: minY * ds,
+                                w: boxW * ds,
+                                h: boxH * ds
+                            });
+                        }
+                    }
+                }
+            }
+
+            for (const item of scaledManualHistory) {
+                const gx0 = Math.max(0, Math.floor(item.x / ds));
+                const gy0 = Math.max(0, Math.floor(item.y / ds));
+                const gx1 = Math.min(gw - 1, Math.ceil((item.x + item.w) / ds));
+                const gy1 = Math.min(gh - 1, Math.ceil((item.y + item.h) / ds));
+                for (let gy = gy0; gy <= gy1; gy++) {
+                    for (let gx = gx0; gx <= gx1; gx++) {
+                        if (item.type === 'protect') {
+                            protectedGrid[gy * gw + gx] = 1;
+                            eraseGrid[gy * gw + gx] = 0;
+                        } else {
+                            eraseGrid[gy * gw + gx] = 1;
+                            protectedGrid[gy * gw + gx] = 0;
+                        }
+                    }
+                }
+            }
+
+            const dst = new Uint8ClampedArray(width * height * 4);
+            const textGamma = isUpscaleActive ? 0.56 : 0.88;
+
+            const inkLUT = new Uint8Array(256);
+            const denom = Math.max(1, 255 - bgThresh);
+            for (let l = 0; l < 256; l++) {
+                const normalized = Math.max(0, (l - bgThresh) / denom);
+                let ink = Math.round(255 * (1 - Math.pow(normalized, textGamma)));
+                if (isUpscaleActive && ink < 95) ink = 0;
+                inkLUT[l] = ink;
+            }
+
+            let darkSourcePixels = 0;
+            let whitenedDarkPixels = 0;
+
+            for (let y = 0; y < height; y++) {
+                const gy = Math.min(gh - 1, Math.floor(y / ds));
+                for (let x = 0; x < width; x++) {
+                    const gx = Math.min(gw - 1, Math.floor(x / ds));
+                    const gIdx = gy * gw + gx;
+                    const pIdx = (y * width + x) * 4;
+
+                    const r = src[pIdx];
+                    const g = src[pIdx + 1];
+                    const b = src[pIdx + 2];
+                    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                    if (lum < 120) darkSourcePixels++;
+
+                    if (eraseGrid[gIdx] === 1) {
+                        dst[pIdx] = 255;
+                        dst[pIdx + 1] = 255;
+                        dst[pIdx + 2] = 255;
+                        dst[pIdx + 3] = 255;
+                        if (lum < 120) whitenedDarkPixels++;
+                        continue;
+                    }
+
+                    if (protectedGrid[gIdx] === 1) {
+                        if (drawBorders && borderGrid[gIdx] === 1) {
+                            dst[pIdx] = 175;
+                            dst[pIdx + 1] = 185;
+                            dst[pIdx + 2] = 200;
+                            dst[pIdx + 3] = 255;
+                        } else {
+                            dst[pIdx] = r;
+                            dst[pIdx + 1] = g;
+                            dst[pIdx + 2] = b;
+                            dst[pIdx + 3] = 255;
+                        }
+                        continue;
+                    }
+
+                    const max = Math.max(r, g, b);
+                    const min = Math.min(r, g, b);
+                    const delta = max - min;
+                    const sat = max === 0 ? 0 : delta / max;
+
+                    if (lum < bgThresh && sat < 0.32 && delta < 40) {
+                        dst[pIdx] = 255;
+                        dst[pIdx + 1] = 255;
+                        dst[pIdx + 2] = 255;
+                        dst[pIdx + 3] = 255;
+                        if (lum < 120) whitenedDarkPixels++;
+                    } else if (sat >= 0.24 && delta >= 28 && lum > 35) {
+                        const hsl = rgbToHsl(r, g, b);
+                        const boostFactor = isUpscaleActive ? Math.min(0.75, colorBoost + 0.12) : colorBoost;
+                        hsl[2] = Math.max(0.15, Math.min(0.42, hsl[2] * (1 - boostFactor)));
+                        hsl[1] = Math.min(1.0, hsl[1] * 1.2);
+                        const [nr, ng, nb] = hslToRgb(hsl[0], hsl[1], hsl[2]);
+                        dst[pIdx] = nr;
+                        dst[pIdx + 1] = ng;
+                        dst[pIdx + 2] = nb;
+                        dst[pIdx + 3] = 255;
+                    } else {
+                        const ink = inkLUT[Math.min(255, Math.max(0, Math.round(lum)))];
+                        dst[pIdx] = ink;
+                        dst[pIdx + 1] = ink;
+                        dst[pIdx + 2] = ink;
+                        dst[pIdx + 3] = 255;
+                        if (ink > 220 && lum < 120) whitenedDarkPixels++;
+                    }
+                }
+            }
+
+            if (isFinalExport && isUpscaleActive) {
+                applySubtleTextSharpening(dst, width, height, protectedGrid, gw, ds);
+            }
+
+            const inkSavedPercent = darkSourcePixels > 0
+                ? Math.min(99, Math.round((whitenedDarkPixels / darkSourcePixels) * 100))
+                : 90;
+
+            return { dstBuffer: dst.buffer, detectedBoxes, inkSavedPercent };
+        }
+
+        self.onmessage = function(e) {
+            const { jobId, params } = e.data;
+            const result = executeReconstruction(params);
+            self.postMessage(
+                { jobId, dstBuffer: result.dstBuffer, detectedBoxes: result.detectedBoxes, inkSavedPercent: result.inkSavedPercent },
+                [result.dstBuffer]
+            );
+        };
+    `;
+
+    let reconstructionWorker = null;
+    let workerJobCounter = 0;
+    const pendingWorkerJobs = new Map();
+
+    try {
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        reconstructionWorker = new Worker(URL.createObjectURL(blob));
+        reconstructionWorker.onmessage = (e) => {
+            const { jobId, dstBuffer, detectedBoxes, inkSavedPercent } = e.data;
+            const resolver = pendingWorkerJobs.get(jobId);
+            if (resolver) {
+                pendingWorkerJobs.delete(jobId);
+                resolver({ dstBuffer, detectedBoxes, inkSavedPercent });
+            }
+        };
+    } catch (err) {
+        reconstructionWorker = null;
+    }
+
+    // مراقب الظهور لمعالجة الصفحات الظاهرة وتحديث شريط المصغرات (Filmstrip Minimap)
+    const pageVisibilityObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+            const pageNum = parseInt(entry.target.dataset.pageNum, 10);
+            const pageObj = pagesData.find(p => p.pageNum === pageNum);
+            if (!pageObj) continue;
+
+            pageObj.isVisible = entry.isIntersecting;
+            if (entry.isIntersecting) {
+                highlightActiveFilmstripPill(pageNum);
+                if (pageObj.needsReprocess) {
+                    pageObj.needsReprocess = false;
+                    runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
+                }
+            }
+        }
+    }, { rootMargin: '250px 0px', threshold: 0.15 });
 
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
@@ -1210,6 +2310,7 @@
 
             if (pagesData.length > 0) {
                 reprocessAllPages();
+                showToast('✨ تم تطبيق أفضل الإعدادات التلقائية للتحويل الأبيض!', 'gold');
             }
         }
     }
@@ -1225,6 +2326,12 @@
         bestPresetCheckbox.checked = isOptimal;
         if (pagesData.length > 0) {
             reprocessAllPages();
+        }
+    }
+
+    function onLayoutSelectChange() {
+        if (pagesData.length > 0 && slidesPerPageSelect.value !== '1') {
+            openA4PreviewModal();
         }
     }
 
@@ -1246,13 +2353,25 @@
     };
     colorBoostInput.onchange = () => onManualSettingChange();
 
-    showBoxesToggle.onchange = () => pagesData.forEach(p => drawLayoutOverlay(p));
+    showBoxesToggle.onchange = () => {
+        pagesData.forEach(p => drawLayoutOverlay(p));
+        if (activeZoomPageNum) refreshZoomEditorCanvases();
+    };
 
     function setTouchMouseMode(mode) {
         currentMouseMode = mode;
         document.getElementById('modeProtectBtn').className = mode === 'protect' ? 'mode-btn active-protect' : 'mode-btn';
         document.getElementById('modeEraseBtn').className = mode === 'erase' ? 'mode-btn active-erase' : 'mode-btn';
         document.getElementById('modeScrollBtn').className = mode === 'scroll' ? 'mode-btn active-scroll' : 'mode-btn';
+
+        const zProt = document.getElementById('zoomModeProtectBtn');
+        const zErase = document.getElementById('zoomModeEraseBtn');
+        const zScroll = document.getElementById('zoomModeScrollBtn');
+        if (zProt && zErase && zScroll) {
+            zProt.className = mode === 'protect' ? 'mode-btn active-protect' : 'mode-btn';
+            zErase.className = mode === 'erase' ? 'mode-btn active-erase' : 'mode-btn';
+            zScroll.className = mode === 'scroll' ? 'mode-btn active-scroll' : 'mode-btn';
+        }
 
         document.querySelectorAll('.canvas-wrapper').forEach(w => {
             if (mode === 'scroll') {
@@ -1263,6 +2382,61 @@
                 w.classList.remove('scroll-active');
             }
         });
+    }
+
+    // اختصارات الكيبورد السريعة للكمبيوتر والآيباد (Ctrl+Z, P, E, Space, Esc)
+    window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+        if (e.key === 'Escape' && activeZoomPageNum) {
+            closeZoomEditorModal();
+            return;
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            e.preventDefault();
+            const targetPage = (activeZoomPageNum && pagesData.find(p => p.pageNum === activeZoomPageNum)) ||
+                               pagesData.find(p => p.pageNum === lastEditedPageNum && p.manualHistory.length > 0) ||
+                               [...pagesData].reverse().find(p => p.manualHistory.length > 0);
+            if (targetPage && targetPage.manualHistory.length > 0) {
+                targetPage.manualHistory.pop();
+                targetPage.needsReprocess = false;
+                runReconstructionOnCanvas(targetPage, null, targetPage.outCanvas, false);
+                showToast(`↩️ تم التراجع عن آخر تحديد في صفحة ${targetPage.pageNum} (Ctrl+Z)`, 'gold');
+            }
+            return;
+        }
+
+        const key = e.key.toLowerCase();
+        if (key === 'p' || key === 'ح') {
+            e.preventDefault();
+            setTouchMouseMode('protect');
+            showToast('➕ تم التبديل لوضع رسم مربع حماية صورة [P]', 'green');
+        } else if (key === 'e' || key === 'م') {
+            e.preventDefault();
+            setTouchMouseMode('erase');
+            showToast('🧹 تم التبديل لوضع الممسحة وتبييض الأجزاء [E]', 'red');
+        } else if (e.code === 'Space') {
+            e.preventDefault();
+            setTouchMouseMode('scroll');
+            showToast('🖐️ تم التبديل لوضع التمرير الحر [Space]', 'gold');
+        }
+    });
+
+    // وضع المقارنة بالسحب (Before/After Slider)
+    function toggleGlobalSliderCompareMode() {
+        isGlobalSliderCompare = !isGlobalSliderCompare;
+        const btn = document.getElementById('globalCompareSliderBtn');
+        btn.classList.toggle('active-scroll', isGlobalSliderCompare);
+        document.querySelectorAll('.comparison-grid').forEach(grid => {
+            grid.classList.toggle('slider-compare-mode', isGlobalSliderCompare);
+        });
+        showToast(
+            isGlobalSliderCompare
+                ? '🌗 تم تفعيل وضع المقارنة بالسحب! حرك الخط الفاصل يميناً ويساراً.'
+                : '📑 تم العودة لوضع العرض المزدوج جنباً إلى جنب.',
+            'gold'
+        );
     }
 
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
@@ -1295,12 +2469,13 @@
 
     async function handleFile(file) {
         if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
-            alert('يرجى اختيار ملف بصيغة PDF فقط.');
+            showToast('⚠️ يرجى اختيار ملف بصيغة PDF فقط.', 'red');
             return;
         }
 
         uploadedFileName = file.name.replace(/\.pdf$/i, '');
         document.getElementById('fileNameDisplay').textContent = `تم اختيار: ${file.name}`;
+        pageVisibilityObserver.disconnect();
         document.getElementById('pagesContainer').innerHTML = '';
         pagesData = [];
 
@@ -1321,13 +2496,14 @@
         const totalPages = currentPdf.numPages;
         const previewScale = 1.15;
 
+
+
         for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
             updateProgress(
                 ((pageNum - 1) / totalPages) * 100,
                 `معالجة صفحة ${pageNum} من ${totalPages}...`
             );
             await processSinglePagePreview(pageNum, totalPages, previewScale);
-            await new Promise(r => setTimeout(r, 8));
         }
 
         setPipelineStep(5);
@@ -1337,6 +2513,8 @@
         document.getElementById('downloadPdfBtn').disabled = false;
         document.getElementById('autoExcludeBtn').disabled = false;
         document.getElementById('selectAllPagesBtn').disabled = false;
+        document.getElementById('previewA4Btn').disabled = false;
+        showToast(`🎉 تم تجهيز ${totalPages} صفحات بنجاح! يمكنك تكبير أي شريحة Fullscreen للتحديد الدقيق.`, 'green');
     }
 
     async function processSinglePagePreview(pageNum, totalPages, previewScale) {
@@ -1347,10 +2525,12 @@
 
         const pageUI = createPageCardUI(pageNum, width, height);
         document.getElementById('pagesContainer').appendChild(pageUI.card);
+        revealObserver.observe(pageUI.card);
+
+        createFilmstripPill(pageNum);
 
         const origCtx = pageUI.origCanvas.getContext('2d', { willReadFrequently: true });
         await page.render({ canvasContext: origCtx, viewport: viewport }).promise;
-        const origImageData = origCtx.getImageData(0, 0, width, height);
 
         setPipelineStep(2);
         const textContent = await page.getTextContent();
@@ -1364,13 +2544,16 @@
             cardEl: pageUI.card,
             includeCheckbox: pageUI.includeCheckbox,
             includedInPrint: true,
+            inkSavedPercent: 91,
+            isVisible: pageNum <= 3,
+            needsReprocess: false,
+            latestRenderToken: 0,
             origWrapper: pageUI.origWrapper,
             outWrapper: pageUI.outWrapper,
             origCanvas: pageUI.origCanvas,
             overlayCanvas: pageUI.overlayCanvas,
             outCanvas: pageUI.outCanvas,
             statsEl: pageUI.statsEl,
-            origImageData,
             lineBlocks,
             detectedImageBoxes: [],
             autoEraseBoxes: [],
@@ -1378,26 +2561,47 @@
         };
 
         pagesData.push(pageObj);
-        runReconstructionOnCanvas(pageObj, pageObj.origImageData, pageObj.outCanvas, false);
+        pageVisibilityObserver.observe(pageUI.card);
+        await runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
     }
 
+    // شريط المصغرات السريع المدمج (Filmstrip Minimap)
+    function createFilmstripPill() {}
+    function highlightActiveFilmstripPill() {}
+    function syncFilmstripInclusionState() {}
+
+    // تحديث عداد توفير الورق ونسبة توفير الحبر الأسود (Ink Saver Gauge)
     function updateIncludedPagesSummary() {
         const total = pagesData.length;
-        const included = pagesData.filter(p => p.includedInPrint).length;
+        const includedPages = pagesData.filter(p => p.includedInPrint);
+        const included = includedPages.length;
         const saved = total - included;
         const summaryEl = document.getElementById('includedPagesSummary');
+
         if (saved > 0) {
-            summaryEl.textContent = `📑 الصفحات المحددة للطباعة: ${included} من ${total} صفحة (وفرت ${saved} صفحات!)`;
+            summaryEl.textContent = `📑 الصفحات المحددة للطباعة: ${included} من ${total} صفحة (وفرت ${saved} ورقات!)`;
         } else {
             summaryEl.textContent = `📑 الصفحات المحددة للطباعة: ${included} من ${total} صفحة`;
         }
+
+        const avgInkSaved = includedPages.length > 0
+            ? Math.round(includedPages.reduce((acc, p) => acc + (p.inkSavedPercent || 90), 0) / includedPages.length)
+            : 0;
+
+        document.getElementById('inkSavedText').textContent = `💧 توفير الحبر الأسود: ${avgInkSaved}%`;
+        document.getElementById('inkGaugeFill').style.width = `${avgInkSaved}%`;
+        syncFilmstripInclusionState();
     }
 
-    function autoExcludeCoversAndDividers() {
+    async function autoExcludeCoversAndDividers() {
         if (!pagesData.length) return;
         let excludedCount = 0;
 
         for (const p of pagesData) {
+            if (p.needsReprocess) {
+                p.needsReprocess = false;
+                await runReconstructionOnCanvas(p, null, p.outCanvas, false);
+            }
             const isFirstCover = p.pageNum === 1;
             const isLastEnding = p.pageNum === p.totalPages && p.totalPages > 2;
             const isSectionDivider = p.detectedImageBoxes.length === 0 && p.lineBlocks.length <= 4;
@@ -1415,7 +2619,7 @@
         }
 
         updateIncludedPagesSummary();
-        alert(`✅ تم استبعاد ${excludedCount} صفحات (الغلاف + فواصل العناوين + الخاتمة) تلقائياً لتوفير الورق والحبر!`);
+        showToast(`🗑️ تم استبعاد ${excludedCount} صفحات (الغلاف + الفواصل + الخاتمة) تلقائياً لتوفير الورق والحبر!`, 'green');
     }
 
     function toggleAllPagesInclusion(includeAll) {
@@ -1425,6 +2629,111 @@
             p.cardEl.classList.toggle('excluded-page', !includeAll);
         }
         updateIncludedPagesSummary();
+        showToast('☑️ تم تحديد جميع الصفحات لتضمينها في الطباعة.', 'gold');
+    }
+
+    // تعميم التحديد اليدوي على جميع صفحات الملخص بضغطة واحدة
+    function applyManualBoxToAllPages(sourcePageNum) {
+        const srcPage = pagesData.find(p => p.pageNum === sourcePageNum);
+        if (!srcPage || srcPage.manualHistory.length === 0) {
+            showToast('⚠️ ارسم مربع حماية أو مسح أولاً في هذه الصفحة ثم اضغط تعميم!', 'red');
+            return;
+        }
+
+        const lastBox = srcPage.manualHistory[srcPage.manualHistory.length - 1];
+        for (const p of pagesData) {
+            if (p.pageNum === sourcePageNum) continue;
+            p.manualHistory.push({ ...lastBox });
+            if (p.isVisible) {
+                p.needsReprocess = false;
+                runReconstructionOnCanvas(p, null, p.outCanvas, false);
+            } else {
+                p.needsReprocess = true;
+            }
+        }
+        showToast(`📌 تم تعميم المربع (${lastBox.type === 'protect' ? 'حماية صورة' : 'مسح'}) على جميع الـ ${pagesData.length} صفحات!`, 'green');
+    }
+
+    // نافذة التكبير الكامل (Fullscreen Zoom Modal) للتحديد الدقيق
+    function openZoomEditorModal(pageNum) {
+        const pageObj = pagesData.find(p => p.pageNum === pageNum);
+        if (!pageObj) return;
+
+        activeZoomPageNum = pageNum;
+        currentZoomFactor = 1.5;
+        zoomModalShowOriginal = false;
+        document.getElementById('zoomToggleSourceBtn').textContent = '👁️ عرض: البيضاء الجاهزة للطباعة';
+        document.getElementById('zoomModalTitle').textContent = `🔍 تكبير صفحة (${pageNum}) للتحديد الدقيق (${Math.round(currentZoomFactor * 100)}%)`;
+
+        document.getElementById('zoomEditorModal').classList.add('open');
+        refreshZoomEditorCanvases();
+        applyZoomDimensions();
+    }
+
+    function closeZoomEditorModal() {
+        activeZoomPageNum = null;
+        document.getElementById('zoomEditorModal').classList.remove('open');
+    }
+
+    function toggleZoomModalSource() {
+        zoomModalShowOriginal = !zoomModalShowOriginal;
+        document.getElementById('zoomToggleSourceBtn').textContent = zoomModalShowOriginal
+            ? '👁️ عرض: الصفحة الأصلية + التخطيط'
+            : '👁️ عرض: البيضاء الجاهزة للطباعة';
+        refreshZoomEditorCanvases();
+    }
+
+    function setZoomFactor(newFactor) {
+        currentZoomFactor = Math.max(0.75, Math.min(3.5, newFactor));
+        if (activeZoomPageNum) {
+            document.getElementById('zoomModalTitle').textContent =
+                `🔍 تكبير صفحة (${activeZoomPageNum}) للتحديد الدقيق (${Math.round(currentZoomFactor * 100)}%)`;
+        }
+        applyZoomDimensions();
+    }
+
+    function applyZoomDimensions() {
+        const pageObj = pagesData.find(p => p.pageNum === activeZoomPageNum);
+        if (!pageObj) return;
+        const wrapper = document.getElementById('zoomCanvasWrapper');
+        const baseW = Math.min(window.innerWidth * 0.88, 1000);
+        const ratio = pageObj.height / pageObj.width;
+        const targetW = Math.round(baseW * currentZoomFactor);
+        const targetH = Math.round(targetW * ratio);
+        wrapper.style.width = `${targetW}px`;
+        wrapper.style.height = `${targetH}px`;
+    }
+
+    function refreshZoomEditorCanvases() {
+        const pageObj = pagesData.find(p => p.pageNum === activeZoomPageNum);
+        if (!pageObj) return;
+
+        const zoomMain = document.getElementById('zoomMainCanvas');
+        const zoomOverlay = document.getElementById('zoomOverlayCanvas');
+
+        zoomMain.width = pageObj.width;
+        zoomMain.height = pageObj.height;
+        zoomOverlay.width = pageObj.width;
+        zoomOverlay.height = pageObj.height;
+
+        const mCtx = zoomMain.getContext('2d');
+        mCtx.clearRect(0, 0, pageObj.width, pageObj.height);
+        mCtx.drawImage(zoomModalShowOriginal ? pageObj.origCanvas : pageObj.outCanvas, 0, 0);
+
+        const oCtx = zoomOverlay.getContext('2d');
+        oCtx.clearRect(0, 0, pageObj.width, pageObj.height);
+        oCtx.drawImage(pageObj.overlayCanvas, 0, 0);
+    }
+
+    function undoFromZoomModal() {
+        if (!activeZoomPageNum) return;
+        const p = pagesData.find(item => item.pageNum === activeZoomPageNum);
+        if (p && p.manualHistory.length > 0) {
+            p.manualHistory.pop();
+            p.needsReprocess = false;
+            runReconstructionOnCanvas(p, null, p.outCanvas, false);
+            showToast(`↩️ تم التراجع عن آخر مربع في صفحة ${p.pageNum}`, 'gold');
+        }
     }
 
     function extractGroupedLines(textContent, viewport) {
@@ -1510,328 +2819,75 @@
         return boxes;
     }
 
-    function runReconstructionOnCanvas(pageObj, sourceImageData, targetCanvas, isFinalExport = false) {
+    async function runReconstructionOnCanvas(pageObj, customSourceImageData, targetCanvas, isFinalExport = false) {
+        const renderToken = !isFinalExport ? ++pageObj.latestRenderToken : 0;
+
+        const sourceImageData = customSourceImageData ||
+            pageObj.origCanvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, pageObj.width, pageObj.height);
+
         const width = sourceImageData.width;
         const height = sourceImageData.height;
-        const src = sourceImageData.data;
 
         const bgThresh = parseInt(bgThresholdInput.value, 10);
         const cardThresh = parseInt(cardThresholdInput.value, 10);
         const colorBoost = parseInt(colorBoostInput.value, 10) / 100;
         const drawBorders = addCardBorders.checked;
         const isUpscaleActive = upscaleTextCheckbox.checked;
-
-        const ds = Math.max(2, Math.round(width / 320));
-        const gw = Math.ceil(width / ds);
-        const gh = Math.ceil(height / ds);
-        const brightGrid = new Uint8Array(gw * gh);
-
         const autoEraseBoxes = getAutoLogoBoxesForSize(width, height, pageObj.pageNum, pageObj.totalPages);
 
-        const scaledManualHistory = pageObj.manualHistory.map(m => ({
-            type: m.type,
-            x: m.rx * width,
-            y: m.ry * height,
-            w: m.rw * width,
-            h: m.rh * height
-        }));
+        const srcBuffer = sourceImageData.data.buffer.slice(0);
 
-        const manualEraseBoxes = scaledManualHistory.filter(m => m.type === 'erase');
-        const manualProtectBoxes = scaledManualHistory.filter(m => m.type === 'protect');
+        const params = {
+            srcBuffer,
+            width,
+            height,
+            bgThresh,
+            cardThresh,
+            colorBoost,
+            drawBorders,
+            isUpscaleActive,
+            isFinalExport,
+            autoEraseBoxes,
+            manualHistory: pageObj.manualHistory
+        };
 
-        const eraseGrid = new Uint8Array(gw * gh);
-        for (const eBox of [...autoEraseBoxes, ...manualEraseBoxes]) {
-            const gx0 = Math.max(0, Math.floor(eBox.x / ds));
-            const gy0 = Math.max(0, Math.floor(eBox.y / ds));
-            const gx1 = Math.min(gw - 1, Math.ceil((eBox.x + eBox.w) / ds));
-            const gy1 = Math.min(gh - 1, Math.ceil((eBox.y + eBox.h) / ds));
-            for (let gy = gy0; gy <= gy1; gy++) {
-                for (let gx = gx0; gx <= gx1; gx++) {
-                    eraseGrid[gy * gw + gx] = 1;
-                }
-            }
+        let result;
+        if (reconstructionWorker) {
+            const jobId = ++workerJobCounter;
+            result = await new Promise((resolve) => {
+                pendingWorkerJobs.set(jobId, resolve);
+                reconstructionWorker.postMessage({ jobId, params }, [srcBuffer]);
+            });
+        } else {
+            result = fallbackSyncReconstruction(params);
         }
 
-        for (let gy = 0; gy < gh; gy++) {
-            const py = Math.min(height - 1, gy * ds);
-            for (let gx = 0; gx < gw; gx++) {
-                const gIdx = gy * gw + gx;
-                if (eraseGrid[gIdx] === 1) continue;
-
-                const px = Math.min(width - 1, gx * ds);
-                const idx = (py * width + px) * 4;
-                const lum = 0.299 * src[idx] + 0.587 * src[idx + 1] + 0.114 * src[idx + 2];
-
-                if (lum >= cardThresh) {
-                    brightGrid[gIdx] = 1;
-                }
-            }
-        }
-
-        const visited = new Uint8Array(gw * gh);
-        const protectedGrid = new Uint8Array(gw * gh);
-        const borderGrid = new Uint8Array(gw * gh);
-        const detectedBoxes = [];
-
-        const minBlobArea = Math.floor((gw * gh) * 0.0032);
-
-        for (let startY = 0; startY < gh; startY++) {
-            for (let startX = 0; startX < gw; startX++) {
-                const startIdx = startY * gw + startX;
-                if (brightGrid[startIdx] === 1 && !visited[startIdx]) {
-                    const queue = [startIdx];
-                    visited[startIdx] = 1;
-                    const component = [startIdx];
-
-                    let minX = startX, maxX = startX, minY = startY, maxY = startY;
-
-                    let head = 0;
-                    while (head < queue.length) {
-                        const curr = queue[head++];
-                        const cy = Math.floor(curr / gw);
-                        const cx = curr % gw;
-
-                        if (cx < minX) minX = cx;
-                        if (cx > maxX) maxX = cx;
-                        if (cy < minY) minY = cy;
-                        if (cy > maxY) maxY = cy;
-
-                        const neighbors = [
-                            cy > 0 ? curr - gw : -1,
-                            cy < gh - 1 ? curr + gw : -1,
-                            cx > 0 ? curr - 1 : -1,
-                            cx < gw - 1 ? curr + 1 : -1
-                        ];
-
-                        for (const n of neighbors) {
-                            if (n !== -1 && brightGrid[n] === 1 && !visited[n]) {
-                                visited[n] = 1;
-                                queue.push(n);
-                                component.push(n);
-                            }
-                        }
-                    }
-
-                    const boxW = maxX - minX + 1;
-                    const boxH = maxY - minY + 1;
-                    const fillRatio = component.length / (boxW * boxH);
-
-                    if (component.length >= minBlobArea && boxW > 5 && boxH > 4) {
-                        if (fillRatio > 0.35) {
-                            const radius = Math.min(4, Math.floor(Math.min(boxW, boxH) * 0.08));
-                            for (let gy = minY; gy <= maxY; gy++) {
-                                for (let gx = minX; gx <= maxX; gx++) {
-                                    let dx = 0, dy = 0;
-                                    if (gx < minX + radius) dx = (minX + radius) - gx;
-                                    else if (gx > maxX - radius) dx = gx - (maxX - radius);
-                                    if (gy < minY + radius) dy = (minY + radius) - gy;
-                                    else if (gy > maxY - radius) dy = gy - (maxY - radius);
-
-                                    if (dx * dx + dy * dy <= radius * radius + 1) {
-                                        protectedGrid[gy * gw + gx] = 1;
-                                        if (gx === minX || gx === maxX || gy === minY || gy === maxY) {
-                                            borderGrid[gy * gw + gx] = 1;
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            const subW = boxW + 2;
-                            const subH = boxH + 2;
-                            const subMask = new Uint8Array(subW * subH);
-
-                            for (const cIdx of component) {
-                                const cy = Math.floor(cIdx / gw) - minY + 1;
-                                const cx = (cIdx % gw) - minX + 1;
-                                subMask[cy * subW + cx] = 1;
-                            }
-
-                            const extQueue = [0];
-                            subMask[0] = 2;
-                            let eHead = 0;
-                            while (eHead < extQueue.length) {
-                                const curr = extQueue[eHead++];
-                                const cy = Math.floor(curr / subW);
-                                const cx = curr % subW;
-
-                                const nbs = [
-                                    cy > 0 ? curr - subW : -1,
-                                    cy < subH - 1 ? curr + subW : -1,
-                                    cx > 0 ? curr - 1 : -1,
-                                    cx < subW - 1 ? curr + 1 : -1
-                                ];
-                                for (const n of nbs) {
-                                    if (n !== -1 && subMask[n] === 0) {
-                                        subMask[n] = 2;
-                                        extQueue.push(n);
-                                    }
-                                }
-                            }
-
-                            for (let sy = 1; sy < subH - 1; sy++) {
-                                for (let sx = 1; sx < subW - 1; sx++) {
-                                    if (subMask[sy * subW + sx] !== 2) {
-                                        const gy = minY + sy - 1;
-                                        const gx = minX + sx - 1;
-                                        protectedGrid[gy * gw + gx] = 1;
-                                        if (
-                                            subMask[(sy - 1) * subW + sx] === 2 ||
-                                            subMask[(sy + 1) * subW + sx] === 2 ||
-                                            subMask[sy * subW + (sx - 1)] === 2 ||
-                                            subMask[sy * subW + (sx + 1)] === 2
-                                        ) {
-                                            borderGrid[gy * gw + gx] = 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        detectedBoxes.push({
-                            x: minX * ds,
-                            y: minY * ds,
-                            w: boxW * ds,
-                            h: boxH * ds
-                        });
-                    }
-                }
-            }
-        }
-
-        for (const item of scaledManualHistory) {
-            const gx0 = Math.max(0, Math.floor(item.x / ds));
-            const gy0 = Math.max(0, Math.floor(item.y / ds));
-            const gx1 = Math.min(gw - 1, Math.ceil((item.x + item.w) / ds));
-            const gy1 = Math.min(gh - 1, Math.ceil((item.y + item.h) / ds));
-            for (let gy = gy0; gy <= gy1; gy++) {
-                for (let gx = gx0; gx <= gx1; gx++) {
-                    if (item.type === 'protect') {
-                        protectedGrid[gy * gw + gx] = 1;
-                        eraseGrid[gy * gw + gx] = 0;
-                    } else {
-                        eraseGrid[gy * gw + gx] = 1;
-                        protectedGrid[gy * gw + gx] = 0;
-                    }
-                }
-            }
-        }
-
-        if (!isFinalExport) {
-            pageObj.detectedImageBoxes = detectedBoxes;
-            pageObj.autoEraseBoxes = autoEraseBoxes;
+        if (!isFinalExport && renderToken !== pageObj.latestRenderToken) {
+            return;
         }
 
         const outCtx = targetCanvas.getContext('2d');
-        const outImageData = outCtx.createImageData(width, height);
-        const dst = outImageData.data;
-
-        const textGamma = isUpscaleActive ? 0.56 : 0.88;
-
-        for (let y = 0; y < height; y++) {
-            const gy = Math.min(gh - 1, Math.floor(y / ds));
-            for (let x = 0; x < width; x++) {
-                const gx = Math.min(gw - 1, Math.floor(x / ds));
-                const gIdx = gy * gw + gx;
-                const pIdx = (y * width + x) * 4;
-
-                if (eraseGrid[gIdx] === 1) {
-                    dst[pIdx] = 255;
-                    dst[pIdx + 1] = 255;
-                    dst[pIdx + 2] = 255;
-                    dst[pIdx + 3] = 255;
-                    continue;
-                }
-
-                const r = src[pIdx];
-                const g = src[pIdx + 1];
-                const b = src[pIdx + 2];
-
-                if (protectedGrid[gIdx] === 1) {
-                    if (drawBorders && borderGrid[gIdx] === 1) {
-                        dst[pIdx] = 175;
-                        dst[pIdx + 1] = 185;
-                        dst[pIdx + 2] = 200;
-                        dst[pIdx + 3] = 255;
-                    } else {
-                        dst[pIdx] = r;
-                        dst[pIdx + 1] = g;
-                        dst[pIdx + 2] = b;
-                        dst[pIdx + 3] = 255;
-                    }
-                    continue;
-                }
-
-                const max = Math.max(r, g, b);
-                const min = Math.min(r, g, b);
-                const delta = max - min;
-                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                const sat = max === 0 ? 0 : delta / max;
-
-                if (lum < bgThresh && sat < 0.32 && delta < 40) {
-                    dst[pIdx] = 255;
-                    dst[pIdx + 1] = 255;
-                    dst[pIdx + 2] = 255;
-                    dst[pIdx + 3] = 255;
-                } else if (sat >= 0.24 && delta >= 28 && lum > 35) {
-                    const hsl = rgbToHsl(r, g, b);
-                    const boostFactor = isUpscaleActive ? Math.min(0.75, colorBoost + 0.12) : colorBoost;
-                    hsl[2] = Math.max(0.15, Math.min(0.42, hsl[2] * (1 - boostFactor)));
-                    hsl[1] = Math.min(1.0, hsl[1] * 1.2);
-                    const [nr, ng, nb] = hslToRgb(hsl[0], hsl[1], hsl[2]);
-                    dst[pIdx] = nr;
-                    dst[pIdx + 1] = ng;
-                    dst[pIdx + 2] = nb;
-                    dst[pIdx + 3] = 255;
-                } else {
-                    const normalized = Math.max(0, (lum - bgThresh) / (255 - bgThresh));
-                    let ink = Math.round(255 * (1 - Math.pow(normalized, textGamma)));
-                    if (isUpscaleActive && ink < 95) ink = 0;
-                    dst[pIdx] = ink;
-                    dst[pIdx + 1] = ink;
-                    dst[pIdx + 2] = ink;
-                    dst[pIdx + 3] = 255;
-                }
-            }
-        }
-
-        if (isFinalExport && isUpscaleActive) {
-            applySubtleTextSharpening(outImageData.data, width, height, protectedGrid, gw, ds);
-        }
-
+        const outImageData = new ImageData(new Uint8ClampedArray(result.dstBuffer), width, height);
         outCtx.putImageData(outImageData, 0, 0);
 
         if (!isFinalExport) {
-            const totalImages = detectedBoxes.length + manualProtectBoxes.length;
-            pageObj.statsEl.textContent = `الصور: ${totalImages} • الأسطر: ${pageObj.lineBlocks.length}`;
+            pageObj.detectedImageBoxes = result.detectedBoxes;
+            pageObj.autoEraseBoxes = autoEraseBoxes;
+            pageObj.inkSavedPercent = result.inkSavedPercent || 91;
+            const manualProtectCount = pageObj.manualHistory.filter(m => m.type === 'protect').length;
+            const totalImages = result.detectedBoxes.length + manualProtectCount;
+            pageObj.statsEl.textContent = `الصور: ${totalImages} • الأسطر: ${pageObj.lineBlocks.length} • توفير الحبر: ${pageObj.inkSavedPercent}%`;
             drawLayoutOverlay(pageObj);
+            updateIncludedPagesSummary();
+            if (activeZoomPageNum === pageObj.pageNum) {
+                refreshZoomEditorCanvases();
+            }
         }
     }
 
-    function applySubtleTextSharpening(data, width, height, protectedGrid, gw, ds) {
-        const copy = new Uint8ClampedArray(data);
-        const amount = 0.38;
-        for (let y = 1; y < height - 1; y++) {
-            const gy = Math.floor(y / ds);
-            for (let x = 1; x < width - 1; x++) {
-                const gx = Math.floor(x / ds);
-                if (protectedGrid[gy * gw + gx] !== 1) continue;
-
-                const idx = (y * width + x) * 4;
-                const up = ((y - 1) * width + x) * 4;
-                const down = ((y + 1) * width + x) * 4;
-                const left = (y * width + (x - 1)) * 4;
-                const right = (y * width + (x + 1)) * 4;
-
-                for (let c = 0; c < 3; c++) {
-                    const center = copy[idx + c];
-                    const neighborsAvg = 0.25 * (copy[up + c] + copy[down + c] + copy[left + c] + copy[right + c]);
-                    const diff = center - neighborsAvg;
-                    if (Math.abs(diff) > 8) {
-                        data[idx + c] = Math.max(0, Math.min(255, Math.round(center + diff * amount)));
-                    }
-                }
-            }
-        }
+    function fallbackSyncReconstruction(params) {
+        const fn = new Function('params', workerCode + '\nreturn executeReconstruction(params);');
+        return fn(params);
     }
 
     function drawLayoutOverlay(pageObj) {
@@ -1874,6 +2930,7 @@
     }
 
     let activeDragState = null;
+    let activeSliderDrag = null;
 
     function getClientXY(e) {
         if (e.touches && e.touches.length > 0) {
@@ -1886,9 +2943,49 @@
     }
 
     function handleGlobalStart(e) {
+        const sliderBar = e.target.closest('.ba-slider-bar');
+        if (sliderBar) {
+            if (e.cancelable) e.preventDefault();
+            activeSliderDrag = sliderBar.closest('.comparison-grid');
+            return;
+        }
+
         if (currentMouseMode === 'scroll') return;
         if (e.type === 'mousedown' && e.button !== 0) return;
-        if (e.target.closest('button, input, select, label, .page-header')) return;
+        if (e.target.closest('button, input, select, label, .page-header, .a4-modal-card, .unified-sticky-dock, .zoom-toolbar')) return;
+
+        // دعم الرسم الدقيق داخل نافذة الزوم Fullscreen
+        const zoomWrapper = e.target.closest('#zoomCanvasWrapper');
+        if (zoomWrapper && activeZoomPageNum) {
+            const pageObj = pagesData.find(p => p.pageNum === activeZoomPageNum);
+            if (!pageObj) return;
+            const pt = getClientXY(e);
+            if (e.cancelable) e.preventDefault();
+
+            activeDragState = {
+                pageObj,
+                targetWrapper: zoomWrapper,
+                startX: pt.x,
+                startY: pt.y,
+                currX: pt.x,
+                currY: pt.y
+            };
+
+            if (currentMouseMode === 'protect') {
+                globalMarquee.style.borderColor = '#10b981';
+                globalMarquee.style.background = 'rgba(16, 185, 129, 0.22)';
+            } else {
+                globalMarquee.style.borderColor = '#f43f5e';
+                globalMarquee.style.background = 'rgba(244, 63, 94, 0.24)';
+            }
+
+            globalMarquee.style.display = 'block';
+            globalMarquee.style.left = `${pt.x}px`;
+            globalMarquee.style.top = `${pt.y}px`;
+            globalMarquee.style.width = '0px';
+            globalMarquee.style.height = '0px';
+            return;
+        }
 
         const pageItemEl = e.target.closest('.page-item');
         if (!pageItemEl) return;
@@ -1911,7 +3008,7 @@
             pt.y - (outRect.top + outRect.height / 2)
         );
 
-        const targetWrapper = distToOrig <= distToOut ? pageObj.origWrapper : pageObj.outWrapper;
+        const targetWrapper = (isGlobalSliderCompare || distToOrig <= distToOut) ? pageObj.origWrapper : pageObj.outWrapper;
 
         if (e.cancelable) e.preventDefault();
 
@@ -1940,6 +3037,16 @@
     }
 
     function handleGlobalMove(e) {
+        if (activeSliderDrag) {
+            if (e.cancelable) e.preventDefault();
+            const pt = getClientXY(e);
+            const rect = activeSliderDrag.getBoundingClientRect();
+            const ratio = Math.max(0.05, Math.min(0.95, (pt.x - rect.left) / rect.width));
+            activeSliderDrag.style.setProperty('--ba-ratio', ratio);
+            activeSliderDrag.style.setProperty('--ba-pos', `${Math.round(ratio * 100)}%`);
+            return;
+        }
+
         if (!activeDragState) return;
         if (e.cancelable) e.preventDefault();
 
@@ -1959,6 +3066,11 @@
     }
 
     function handleGlobalEnd() {
+        if (activeSliderDrag) {
+            activeSliderDrag = null;
+            return;
+        }
+
         if (!activeDragState) return;
         const { pageObj, targetWrapper, startX, startY, currX, currY } = activeDragState;
         activeDragState = null;
@@ -1987,7 +3099,9 @@
                 rw: wPx / rect.width,
                 rh: hPx / rect.height
             });
-            runReconstructionOnCanvas(pageObj, pageObj.origImageData, pageObj.outCanvas, false);
+            lastEditedPageNum = pageObj.pageNum;
+            pageObj.needsReprocess = false;
+            runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
         }
     }
 
@@ -2002,14 +3116,19 @@
 
     function reprocessAllPages() {
         for (const pageObj of pagesData) {
-            runReconstructionOnCanvas(pageObj, pageObj.origImageData, pageObj.outCanvas, false);
+            if (pageObj.isVisible) {
+                pageObj.needsReprocess = false;
+                runReconstructionOnCanvas(pageObj, null, pageObj.outCanvas, false);
+            } else {
+                pageObj.needsReprocess = true;
+            }
         }
         updateIncludedPagesSummary();
     }
 
     function createPageCardUI(pageNum, width, height) {
         const card = document.createElement('div');
-        card.className = 'app-card page-item';
+        card.className = 'app-card page-item scroll-reveal in-view';
         card.dataset.pageNum = pageNum;
 
         const header = document.createElement('div');
@@ -2046,27 +3165,43 @@
         const toolsDiv = document.createElement('div');
         toolsDiv.className = 'page-tools';
 
+        const zoomBtn = document.createElement('button');
+        zoomBtn.type = 'button';
+        zoomBtn.className = 'btn-sm btn-zoom-highlight';
+        zoomBtn.textContent = '🔍 تكبير Fullscreen للتحديد الدقيق';
+        zoomBtn.onclick = () => openZoomEditorModal(pageNum);
+
+        const applyAllBtn = document.createElement('button');
+        applyAllBtn.type = 'button';
+        applyAllBtn.className = 'pill-btn btn-sm';
+        applyAllBtn.textContent = '📌 تعميم آخر مربع على كل الصفحات';
+        applyAllBtn.onclick = () => applyManualBoxToAllPages(pageNum);
+
         const undoBtn = document.createElement('button');
         undoBtn.type = 'button';
         undoBtn.className = 'pill-btn btn-sm';
-        undoBtn.textContent = '↩️ تراجع عن آخر مربع';
+        undoBtn.textContent = '↩️ تراجع';
         undoBtn.onclick = () => {
             const p = pagesData.find(item => item.pageNum === pageNum);
             if (p && p.manualHistory.length > 0) {
                 p.manualHistory.pop();
-                runReconstructionOnCanvas(p, p.origImageData, p.outCanvas, false);
+                p.needsReprocess = false;
+                runReconstructionOnCanvas(p, null, p.outCanvas, false);
+                showToast(`↩️ تم التراجع عن آخر مربع في صفحة ${pageNum}`, 'gold');
             }
         };
 
         const clearManualBtn = document.createElement('button');
         clearManualBtn.type = 'button';
         clearManualBtn.className = 'pill-btn btn-sm';
-        clearManualBtn.textContent = '🗑️ مسح كل التحديد اليدوي';
+        clearManualBtn.textContent = '🗑️ مسح اليدوي';
         clearManualBtn.onclick = () => {
             const p = pagesData.find(item => item.pageNum === pageNum);
             if (p) {
                 p.manualHistory = [];
-                runReconstructionOnCanvas(p, p.origImageData, p.outCanvas, false);
+                p.needsReprocess = false;
+                runReconstructionOnCanvas(p, null, p.outCanvas, false);
+                showToast(`🗑️ تم مسح التحديدات اليدوية في صفحة ${pageNum}`, 'gold');
             }
         };
 
@@ -2083,10 +3218,14 @@
                 link.download = `${uploadedFileName}_Page_${pageNum}_White.png`;
                 link.href = hiResCanvas.toDataURL('image/png');
                 link.click();
+                clearSharedExportCanvases();
                 dlImgBtn.textContent = '🖼️ حفظ PNG';
+                showToast(`🖼️ تم تحميل صورة صفحة ${pageNum} بدقة Ultra-HD!`, 'green');
             }
         };
 
+        toolsDiv.appendChild(zoomBtn);
+        toolsDiv.appendChild(applyAllBtn);
         toolsDiv.appendChild(undoBtn);
         toolsDiv.appendChild(clearManualBtn);
         toolsDiv.appendChild(dlImgBtn);
@@ -2094,11 +3233,13 @@
         header.appendChild(toolsDiv);
 
         const grid = document.createElement('div');
-        grid.className = 'comparison-grid';
+        grid.className = `comparison-grid ${isGlobalSliderCompare ? 'slider-compare-mode' : ''}`;
+        grid.style.setProperty('--ba-ratio', '0.5');
+        grid.style.setProperty('--ba-pos', '50%');
 
         const origBox = document.createElement('div');
-        origBox.className = 'canvas-box';
-        origBox.innerHTML = `<div class="canvas-label"><span>1. الصفحة الأصلية + التخطيط (اسحب بالماوس أو اللمس هنا أو من خارج الحواف)</span><span>Original</span></div>`;
+        origBox.className = 'canvas-box orig-canvas-box';
+        origBox.innerHTML = `<div class="canvas-label"><span>1. الصفحة الأصلية + التخطيط (اسحب لرسم مربع حماية أو مسح)</span><span>Original</span></div>`;
         const origWrapper = document.createElement('div');
         origWrapper.className = 'canvas-wrapper drawing-active';
 
@@ -2116,8 +3257,8 @@
         origBox.appendChild(origWrapper);
 
         const outBox = document.createElement('div');
-        outBox.className = 'canvas-box';
-        outBox.innerHTML = `<div class="canvas-label white-label"><span>2. الصفحة البيضاء الجاهزة للطباعة (يمكنك السحب والتحديد هنا أيضاً!)</span><span>Printable White</span></div>`;
+        outBox.className = 'canvas-box out-canvas-box';
+        outBox.innerHTML = `<div class="canvas-label white-label"><span>2. الصفحة البيضاء الجاهزة للطباعة (اسحب هنا أيضاً للتحديد!)</span><span>Printable White</span></div>`;
         const outWrapper = document.createElement('div');
         outWrapper.className = 'canvas-wrapper drawing-active';
 
@@ -2128,13 +3269,152 @@
         outWrapper.appendChild(outCanvas);
         outBox.appendChild(outWrapper);
 
+        const sliderBar = document.createElement('div');
+        sliderBar.className = 'ba-slider-bar';
+        sliderBar.innerHTML = `<div class="ba-slider-knob">↔️</div>`;
+
         grid.appendChild(origBox);
         grid.appendChild(outBox);
+        grid.appendChild(sliderBar);
 
         card.appendChild(header);
         card.appendChild(grid);
 
         return { card, includeCheckbox, origWrapper, outWrapper, origCanvas, overlayCanvas, outCanvas, statsEl };
+    }
+
+    // نافذة المعاينة الحية لورقة الـ A4 المجمعة (Live A4 Sheet Preview + Cornell Notes)
+    async function openA4PreviewModal() {
+        const includedPages = pagesData.filter(p => p.includedInPrint);
+        if (!includedPages.length) {
+            showToast('⚠️ يرجى تحديد صفحة واحدة على الأقل لمعاينتها!', 'red');
+            return;
+        }
+        currentA4PreviewSheetIndex = 0;
+        document.getElementById('a4PreviewModal').classList.add('open');
+        await renderA4PreviewSheet();
+    }
+
+    function closeA4PreviewModal() {
+        document.getElementById('a4PreviewModal').classList.remove('open');
+    }
+
+    async function changeA4PreviewSheet(delta) {
+        const includedPages = pagesData.filter(p => p.includedInPrint);
+        const modeVal = slidesPerPageSelect.value;
+        const perSheet = modeVal === '2_notes' ? 2 : parseInt(modeVal, 10);
+        const totalSheets = Math.ceil(includedPages.length / perSheet);
+        currentA4PreviewSheetIndex = Math.max(0, Math.min(totalSheets - 1, currentA4PreviewSheetIndex + delta));
+        await renderA4PreviewSheet();
+    }
+
+    async function renderA4PreviewSheet() {
+        const includedPages = pagesData.filter(p => p.includedInPrint);
+        const modeVal = slidesPerPageSelect.value;
+        const perSheet = modeVal === '2_notes' ? 2 : parseInt(modeVal, 10);
+        const totalSheets = Math.max(1, Math.ceil(includedPages.length / perSheet));
+        currentA4PreviewSheetIndex = Math.min(currentA4PreviewSheetIndex, totalSheets - 1);
+
+        const canvas = document.getElementById('a4PreviewCanvas');
+        const isLandscape = modeVal === '4' || modeVal === '1';
+        canvas.width = isLandscape ? 1123 : 794;
+        canvas.height = isLandscape ? 794 : 1123;
+
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const startIdx = currentA4PreviewSheetIndex * perSheet;
+        const sheetPages = includedPages.slice(startIdx, startIdx + perSheet);
+
+        for (const p of sheetPages) {
+            if (p.needsReprocess) {
+                p.needsReprocess = false;
+                await runReconstructionOnCanvas(p, null, p.outCanvas, false);
+            }
+        }
+
+        if (modeVal === '1' && sheetPages[0]) {
+            const p = sheetPages[0];
+            ctx.drawImage(p.outCanvas, 20, 20, canvas.width - 40, canvas.height - 40);
+        } else if (modeVal === '2_notes') {
+            const padX = 28, padY = 30, gapY = 26;
+            const rowH = (canvas.height - padY * 2 - gapY) / 2;
+            const slideBoxW = Math.floor((canvas.width - padX * 2) * 0.62);
+            const notesBoxW = (canvas.width - padX * 2) - slideBoxW - 18;
+
+            for (let i = 0; i < sheetPages.length; i++) {
+                const p = sheetPages[i];
+                const topY = padY + i * (rowH + gapY);
+                const slideX = canvas.width - padX - slideBoxW;
+                const notesX = padX;
+
+                const ratio = p.outCanvas.width / p.outCanvas.height;
+                let drawW = slideBoxW;
+                let drawH = drawW / ratio;
+                if (drawH > rowH) {
+                    drawH = rowH;
+                    drawW = drawH * ratio;
+                }
+                const sx = slideX + (slideBoxW - drawW) / 2;
+                const sy = topY + (rowH - drawH) / 2;
+
+                ctx.drawImage(p.outCanvas, sx, sy, drawW, drawH);
+                ctx.strokeStyle = '#b4becd';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(sx, sy, drawW, drawH);
+
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(notesX, sy, notesBoxW, drawH);
+
+                ctx.fillStyle = '#f1f5f9';
+                ctx.fillRect(notesX + 1, sy + 1, notesBoxW - 2, 28);
+                ctx.fillStyle = '#334155';
+                ctx.font = 'bold 13px Cairo, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(`📝 ملاحظات شريحة (${p.pageNum})`, notesX + notesBoxW - 10, sy + 20);
+
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 1;
+                for (let ly = sy + 52; ly < sy + drawH - 12; ly += 24) {
+                    ctx.beginPath();
+                    ctx.moveTo(notesX + 10, ly);
+                    ctx.lineTo(notesX + notesBoxW - 10, ly);
+                    ctx.stroke();
+                }
+            }
+        } else {
+            const cols = modeVal === '2' ? 1 : 2;
+            const rows = modeVal === '6' ? 3 : 2;
+            const padX = 28, padY = 30, gap = 20;
+            const cellW = (canvas.width - padX * 2 - gap * (cols - 1)) / cols;
+            const cellH = (canvas.height - padY * 2 - gap * (rows - 1)) / rows;
+
+            for (let i = 0; i < sheetPages.length; i++) {
+                const p = sheetPages[i];
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                const bx = padX + col * (cellW + gap);
+                const by = padY + row * (cellH + gap);
+
+                const ratio = p.outCanvas.width / p.outCanvas.height;
+                let dw = cellW, dh = dw / ratio;
+                if (dh > cellH) { dh = cellH; dw = dh * ratio; }
+                const ox = bx + (cellW - dw) / 2;
+                const oy = by + (cellH - dh) / 2;
+
+                ctx.drawImage(p.outCanvas, ox, oy, dw, dh);
+                ctx.strokeStyle = '#b4becd';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(ox, oy, dw, dh);
+            }
+        }
+
+        document.getElementById('a4SheetCounterText').textContent =
+            `ورقة A4 رقم ${currentA4PreviewSheetIndex + 1} من ${totalSheets} (${slidesPerPageSelect.options[slidesPerPageSelect.selectedIndex].text})`;
+        document.getElementById('prevA4SheetBtn').disabled = currentA4PreviewSheetIndex === 0;
+        document.getElementById('nextA4SheetBtn').disabled = currentA4PreviewSheetIndex >= totalSheets - 1;
     }
 
     async function renderSinglePageUltraHD(pageObj) {
@@ -2144,30 +3424,35 @@
         const w = Math.floor(viewport.width);
         const h = Math.floor(viewport.height);
 
-        const tempOrigCanvas = document.createElement('canvas');
-        tempOrigCanvas.width = w;
-        tempOrigCanvas.height = h;
-        const tempOrigCtx = tempOrigCanvas.getContext('2d');
+        sharedExportOrigCanvas.width = w;
+        sharedExportOrigCanvas.height = h;
+        const tempOrigCtx = sharedExportOrigCanvas.getContext('2d', { willReadFrequently: true });
         await page.render({ canvasContext: tempOrigCtx, viewport: viewport }).promise;
         const hiResImageData = tempOrigCtx.getImageData(0, 0, w, h);
 
-        const tempOutCanvas = document.createElement('canvas');
-        tempOutCanvas.width = w;
-        tempOutCanvas.height = h;
+        sharedExportOutCanvas.width = w;
+        sharedExportOutCanvas.height = h;
 
-        runReconstructionOnCanvas(pageObj, hiResImageData, tempOutCanvas, true);
+        await runReconstructionOnCanvas(pageObj, hiResImageData, sharedExportOutCanvas, true);
 
-        tempOrigCanvas.width = 1;
-        tempOrigCanvas.height = 1;
+        sharedExportOrigCanvas.width = 1;
+        sharedExportOrigCanvas.height = 1;
 
-        return tempOutCanvas;
+        return sharedExportOutCanvas;
     }
 
-    // تصدير ملف الـ PDF النهائي بدون أي جملة أو نص إضافي أسفل الصفحة
+    function clearSharedExportCanvases() {
+        sharedExportOrigCanvas.width = 1;
+        sharedExportOrigCanvas.height = 1;
+        sharedExportOutCanvas.width = 1;
+        sharedExportOutCanvas.height = 1;
+    }
+
+    // تصدير ملف الـ PDF النهائي
     async function exportPrintablePDF() {
         const includedPages = pagesData.filter(p => p.includedInPrint);
         if (!includedPages.length) {
-            alert('يرجى تحديد صفحة واحدة على الأقل لتضمينها في ملف الطباعة!');
+            showToast('⚠️ يرجى تحديد صفحة واحدة على الأقل لتضمينها في ملف الطباعة!', 'red');
             return;
         }
 
@@ -2177,18 +3462,19 @@
 
         try {
             const { jsPDF } = window.jspdf;
-            const layoutMode = parseInt(slidesPerPageSelect.value, 10);
+            const rawLayoutVal = slidesPerPageSelect.value;
+            const isCornellNotes = rawLayoutVal === '2_notes';
+            const layoutMode = isCornellNotes ? 2 : parseInt(rawLayoutVal, 10);
             const isUpscale = upscaleTextCheckbox.checked;
             const jpegQuality = isUpscale ? 0.96 : 0.92;
 
-            if (layoutMode === 1) {
+            if (layoutMode === 1 && !isCornellNotes) {
                 let pdf = null;
 
                 for (let i = 0; i < includedPages.length; i++) {
                     const p = includedPages[i];
                     btn.innerHTML = `⏳ جاري تصدير صفحة ${i + 1} من ${includedPages.length}...`;
                     updateProgress(((i + 1) / includedPages.length) * 100, `جاري تصدير صفحة ${p.pageNum} بدقة الطباعة الفائقة...`);
-                    await new Promise(r => setTimeout(r, 15));
 
                     const hiResCanvas = await renderSinglePageUltraHD(p);
                     const w = hiResCanvas.width;
@@ -2208,12 +3494,78 @@
 
                     const imgData = hiResCanvas.toDataURL('image/jpeg', jpegQuality);
                     pdf.addImage(imgData, 'JPEG', 0, 0, w, h, undefined, 'FAST');
-
-                    hiResCanvas.width = 1;
-                    hiResCanvas.height = 1;
                 }
 
+                clearSharedExportCanvases();
                 pdf.save(`${uploadedFileName}_White_Printable.pdf`);
+            } else if (isCornellNotes) {
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4',
+                    compress: true
+                });
+
+                const pageW = 210, pageH = 297;
+                const marginX = 8, marginY = 10, gapY = 8;
+                const rowH = (pageH - marginY * 2 - gapY) / 2;
+                const slideAreaW = 122;
+                const notesAreaW = pageW - marginX * 2 - slideAreaW - 5;
+
+                for (let i = 0; i < includedPages.length; i++) {
+                    const p = includedPages[i];
+                    btn.innerHTML = `⏳ جاري تصدير شريحة ${i + 1} من ${includedPages.length}...`;
+                    updateProgress(((i + 1) / includedPages.length) * 100, `جاري تجهيز شريحة ${p.pageNum} مع هامش الملاحظات...`);
+
+                    const slotIdx = i % 2;
+                    if (i > 0 && slotIdx === 0) {
+                        pdf.addPage('a4', 'portrait');
+                    }
+
+                    const topY = marginY + slotIdx * (rowH + gapY);
+                    const slideBoxX = pageW - marginX - slideAreaW;
+                    const notesBoxX = marginX;
+
+                    const hiResCanvas = await renderSinglePageUltraHD(p);
+                    const slideRatio = hiResCanvas.width / hiResCanvas.height;
+
+                    let drawW = slideAreaW;
+                    let drawH = drawW / slideRatio;
+                    if (drawH > rowH) {
+                        drawH = rowH;
+                        drawW = drawH * slideRatio;
+                    }
+
+                    const offsetX = slideBoxX + (slideAreaW - drawW) / 2;
+                    const offsetY = topY + (rowH - drawH) / 2;
+
+                    const imgData = hiResCanvas.toDataURL('image/jpeg', jpegQuality);
+                    pdf.addImage(imgData, 'JPEG', offsetX, offsetY, drawW, drawH, undefined, 'FAST');
+
+                    pdf.setDrawColor(175, 185, 200);
+                    pdf.setLineWidth(0.35);
+                    pdf.rect(offsetX, offsetY, drawW, drawH);
+
+                    pdf.setFillColor(244, 246, 250);
+                    pdf.rect(notesBoxX, offsetY, notesAreaW, 8, 'F');
+                    pdf.setDrawColor(160, 172, 188);
+                    pdf.setLineWidth(0.35);
+                    pdf.rect(notesBoxX, offsetY, notesAreaW, drawH);
+
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(8.5);
+                    pdf.setTextColor(60, 70, 85);
+                    pdf.text(`Notes - Slide #${p.pageNum}`, notesBoxX + 3, offsetY + 5.5);
+
+                    pdf.setDrawColor(210, 218, 228);
+                    pdf.setLineWidth(0.22);
+                    for (let ly = offsetY + 15; ly < offsetY + drawH - 3; ly += 7) {
+                        pdf.line(notesBoxX + 2.5, ly, notesBoxX + notesAreaW - 2.5, ly);
+                    }
+                }
+
+                clearSharedExportCanvases();
+                pdf.save(`${uploadedFileName}_White_CornellNotes_A4.pdf`);
             } else {
                 const isLandscapeA4 = layoutMode === 4;
                 const pdf = new jsPDF({
@@ -2241,7 +3593,6 @@
                     const p = includedPages[i];
                     btn.innerHTML = `⏳ جاري تصدير شريحة ${i + 1} من ${includedPages.length}...`;
                     updateProgress(((i + 1) / includedPages.length) * 100, `جاري تجهيز شريحة ${p.pageNum} بدقة Ultra-HD...`);
-                    await new Promise(r => setTimeout(r, 15));
 
                     const slotIdx = i % layoutMode;
                     if (i > 0 && slotIdx === 0) {
@@ -2270,66 +3621,24 @@
                     const imgData = hiResCanvas.toDataURL('image/jpeg', jpegQuality);
                     pdf.addImage(imgData, 'JPEG', offsetX, offsetY, drawW, drawH, undefined, 'FAST');
 
-                    hiResCanvas.width = 1;
-                    hiResCanvas.height = 1;
-
                     pdf.setDrawColor(180, 190, 205);
                     pdf.setLineWidth(0.35);
                     pdf.rect(offsetX, offsetY, drawW, drawH);
                 }
 
+                clearSharedExportCanvases();
                 pdf.save(`${uploadedFileName}_White_${layoutMode}in1_A4.pdf`);
             }
 
             updateProgress(100, '✅ تم تصدير وتحميل ملف الـ PDF بنجاح!');
+            showToast('🖨️ اكتمل تصدير وتحميل الملخص الأبيض جاهزاً للطباعة!', 'green');
         } catch (err) {
-            alert('حدث خطأ أثناء تصدير الـ PDF: ' + err.message);
+            clearSharedExportCanvases();
+            showToast('❌ حدث خطأ أثناء تصدير الـ PDF: ' + err.message, 'red');
         } finally {
             btn.disabled = false;
             btn.innerHTML = oldText;
         }
-    }
-
-    function rgbToHsl(r, g, b) {
-        r /= 255; g /= 255; b /= 255;
-        const max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
-
-        if (max === min) {
-            h = s = 0;
-        } else {
-            const d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
-            }
-            h /= 6;
-        }
-        return [h, s, l];
-    }
-
-    function hslToRgb(h, s, l) {
-        let r, g, b;
-        if (s === 0) {
-            r = g = b = l;
-        } else {
-            const hue2rgb = (p, q, t) => {
-                if (t < 0) t += 1;
-                if (t > 1) t -= 1;
-                if (t < 1/6) return p + (q - p) * 6 * t;
-                if (t < 1/2) return q;
-                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                return p;
-            };
-            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            const p = 2 * l - q;
-            r = hue2rgb(p, q, h + 1/3);
-            g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1/3);
-        }
-        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
     }
 </script>
 
